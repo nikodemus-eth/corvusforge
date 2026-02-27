@@ -15,10 +15,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from corvusforge.config import ProdConfig
 from corvusforge.core.artifact_store import ContentAddressedStore
 from corvusforge.core.envelope_bus import EnvelopeBus
 from corvusforge.core.hasher import compute_input_hash, compute_output_hash
 from corvusforge.core.prerequisite_graph import PrerequisiteGraph
+from corvusforge.core.production_guard import (
+    enforce_production_constraints,
+    production_waiver_signature_required,
+)
 from corvusforge.core.run_ledger import RunLedger
 from corvusforge.core.stage_machine import StageMachine
 from corvusforge.core.version_pinner import VersionPinner
@@ -46,15 +51,24 @@ class Orchestrator:
         self,
         config: PipelineConfig | None = None,
         run_id: str | None = None,
+        *,
+        prod_config: ProdConfig | None = None,
     ) -> None:
         self.config = config or PipelineConfig()
+        self._prod_config = prod_config or ProdConfig()
+
+        # Production guard — fails hard if production constraints are violated
+        enforce_production_constraints(self._prod_config)
 
         # Core subsystems
         self.ledger = RunLedger(self.config.ledger_db_path)
         self.artifact_store = ContentAddressedStore(self.config.artifact_store_path)
         self.graph = PrerequisiteGraph(DEFAULT_STAGE_DEFINITIONS)
         self.stage_machine = StageMachine(self.ledger, self.graph)
-        self.waiver_manager = WaiverManager(self.artifact_store)
+        self.waiver_manager = WaiverManager(
+            self.artifact_store,
+            require_signature=production_waiver_signature_required(self._prod_config),
+        )
         self.version_pinner = VersionPinner(self.config.version_pin)
         self.envelope_bus = EnvelopeBus()
 
