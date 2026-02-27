@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS run_ledger (
     toolchain_version     TEXT NOT NULL,
     ruleset_versions_json TEXT NOT NULL DEFAULT '{}',
     waiver_refs_json      TEXT NOT NULL DEFAULT '[]',
+    trust_context_json    TEXT NOT NULL DEFAULT '{}',
     payload_hash          TEXT NOT NULL DEFAULT '',
     previous_entry_hash   TEXT NOT NULL DEFAULT '',
     entry_hash            TEXT NOT NULL UNIQUE
@@ -130,9 +131,9 @@ class RunLedger:
                     (entry_id, run_id, stage_id, state_transition, timestamp_utc,
                      input_hash, output_hash, artifact_refs_json,
                      pipeline_version, schema_version, toolchain_version,
-                     ruleset_versions_json, waiver_refs_json, payload_hash,
-                     previous_entry_hash, entry_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     ruleset_versions_json, waiver_refs_json, trust_context_json,
+                     payload_hash, previous_entry_hash, entry_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -150,6 +151,7 @@ class RunLedger:
                     entry.toolchain_version,
                     json.dumps(entry.ruleset_versions),
                     json.dumps(entry.waiver_references),
+                    json.dumps(entry.trust_context),
                     entry.payload_hash,
                     entry.previous_entry_hash,
                     entry.entry_hash,
@@ -357,6 +359,7 @@ class RunLedger:
             toolchain_version,
             ruleset_versions_json,
             waiver_refs_json,
+            trust_context_json,
             payload_hash,
             previous_entry_hash,
             entry_hash,
@@ -375,6 +378,7 @@ class RunLedger:
             toolchain_version=toolchain_version,
             ruleset_versions=json.loads(ruleset_versions_json),
             waiver_references=json.loads(waiver_refs_json),
+            trust_context=json.loads(trust_context_json),
             payload_hash=payload_hash,
             previous_entry_hash=previous_entry_hash,
             entry_hash=entry_hash,

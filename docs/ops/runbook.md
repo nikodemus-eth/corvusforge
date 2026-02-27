@@ -150,7 +150,11 @@ Anchors must be stored **outside the ledger's trust domain** (see threat model, 
 | Email to distribution list | Medium | Timestamped, hard to retroactively modify |
 | Git tag in separate repository | Medium | Requires separate push access |
 
-Recommended minimum: Store anchors in a location that requires different credentials than the project directory.
+**Hard requirement:** Anchor storage must use **different credentials** than the project directory. If the same credentials (SSH key, IAM role, access token) can write both the ledger and the anchor, anchor verification provides zero additional security over the hash chain alone.
+
+Recommended minimum: Separate S3 bucket with a different IAM role, or a git tag in a repository that the CI pipeline's credentials cannot push to.
+
+**Anti-pattern:** Storing anchors in `.corvusforge/anchors/` within the project directory. This is symbolic anchoring — an attacker with file write access can rewrite both the ledger and the anchors atomically.
 
 ### How to Verify Against an Anchor
 

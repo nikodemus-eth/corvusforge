@@ -64,6 +64,12 @@ class ProdConfig(BaseSettings):
     max_concurrent_fleets: int = 8
     fleet_timeout_seconds: int = 300
 
+    # Trust roots — public keys (hex) for signing verification
+    # Set via CORVUSFORGE_PLUGIN_TRUST_ROOT, etc.
+    plugin_trust_root: str = ""    # public key for plugin signature verification
+    waiver_signing_key: str = ""   # public key for waiver signature verification
+    anchor_key: str = ""           # public key for anchor signing (future)
+
     # Observability
     enable_metrics: bool = False
     metrics_port: int = 9090

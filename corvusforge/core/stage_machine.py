@@ -93,6 +93,7 @@ class StageMachine:
         output_hash: str = "",
         artifact_references: list[str] | None = None,
         waiver_references: list[str] | None = None,
+        trust_context: dict[str, str] | None = None,
     ) -> LedgerEntry:
         """Transition a stage to a new state, recording in the ledger.
 
@@ -137,6 +138,7 @@ class StageMachine:
             output_hash=output_hash,
             artifact_references=artifact_references or [],
             waiver_references=waiver_references or [],
+            trust_context=trust_context or {},
         )
         sealed = self._ledger.append(entry)
 

@@ -44,6 +44,7 @@ class LedgerEntry(BaseModel):
         "security": "1.0.0",
     }
     waiver_references: list[str] = []  # waiver_ids, if any
+    trust_context: dict[str, str] = {}  # key fingerprints active at entry time
     previous_entry_hash: str = ""  # SHA-256 of previous entry's canonical bytes
     payload_hash: str = ""  # SHA-256 of the combined entry content
     entry_hash: str = ""  # computed after construction, seals this entry

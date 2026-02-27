@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from corvusforge.bridge.crypto_bridge import compute_trust_context
 from corvusforge.config import ProdConfig
 from corvusforge.core.artifact_store import ContentAddressedStore
 from corvusforge.core.envelope_bus import EnvelopeBus
@@ -76,6 +77,13 @@ class Orchestrator:
         self.run_id = run_id or f"cf-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:3]}"
         self.run_config: RunConfig | None = None
 
+        # Trust context — key fingerprints recorded in every ledger entry
+        self._trust_ctx = compute_trust_context(
+            plugin_trust_root=getattr(self._prod_config, "plugin_trust_root", ""),
+            waiver_signing_key=getattr(self._prod_config, "waiver_signing_key", ""),
+            anchor_key=getattr(self._prod_config, "anchor_key", ""),
+        )
+
         # Stage handler registry
         self._stage_handlers: dict[str, Callable] = {}
 
@@ -103,6 +111,7 @@ class Orchestrator:
             "s0_intake",
             StageState.RUNNING,
             input_hash=compute_input_hash("s0_intake", {"prerequisites": prerequisites or []}),
+            trust_context=self._trust_ctx,
         )
         self.stage_machine.transition(
             self.run_id,
@@ -112,6 +121,7 @@ class Orchestrator:
                 "run_id": self.run_id,
                 "stage_count": len(DEFAULT_STAGE_DEFINITIONS),
             }),
+            trust_context=self._trust_ctx,
         )
 
         return self.run_config
@@ -160,6 +170,7 @@ class Orchestrator:
         self.stage_machine.transition(
             self.run_id, stage_id, StageState.RUNNING,
             input_hash=input_hash,
+            trust_context=self._trust_ctx,
         )
 
         # 2. Execute handler
@@ -173,6 +184,7 @@ class Orchestrator:
                     self.run_id, stage_id, StageState.FAILED,
                     input_hash=input_hash,
                     output_hash=compute_output_hash(stage_id, {"error": str(exc)}),
+                    trust_context=self._trust_ctx,
                 )
                 raise
         else:
@@ -188,6 +200,7 @@ class Orchestrator:
             input_hash=input_hash,
             output_hash=output_hash,
             artifact_references=artifact_refs,
+            trust_context=self._trust_ctx,
         )
 
         return result

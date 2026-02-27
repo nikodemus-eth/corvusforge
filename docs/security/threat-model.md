@@ -87,12 +87,23 @@ The system is single-tenant, single-writer. There is no multi-user access contro
 
 ## 3. Trust Roots
 
-| Trust Root | What It Protects | Storage | Rotation |
-|-----------|-----------------|---------|----------|
-| Plugin signing keys | Plugin identity and integrity | Developer's local keystore or CI secrets | Per-developer, revoke via registry |
-| Waiver signing keys | Gate bypass authorization | Authorized approver's keystore | Per-approver, revoke by expiration |
-| Anchor witness location | Ledger authenticity | External to project (S3, transparency log, etc.) | N/A (append-only) |
-| SHA-256 hash function | All content addressing, all chain integrity | Algorithm — no key | N/A (algorithm replacement = major version) |
+| Trust Root | What It Protects | Storage | Rotation | CI Access |
+|-----------|-----------------|---------|----------|-----------|
+| Plugin signing keys | Plugin identity and integrity | CI secrets manager | Per-key, revoke via registry | **Yes** — CI signs plugins (see ADR-0007) |
+| Waiver signing keys | Gate bypass authorization | Human approver's local keystore | Per-approver, revoke by expiration | **No** — offline only (see ADR-0007) |
+| Anchor export key | Ledger authenticity witness | CI secrets manager | Per-key | **Yes** — CI exports anchors |
+| Anchor witness location | Ledger authenticity (storage) | External to project — **must be outside ledger write domain** | N/A (append-only) | Separate credentials required |
+| SHA-256 hash function | All content addressing, all chain integrity | Algorithm — no key | N/A (algorithm replacement = major version) | N/A |
+
+### Key Fingerprint Recording
+
+Every ledger entry records a `trust_context` dict containing fingerprints of the signing keys active at entry creation time:
+
+- `plugin_trust_root_fp`: SHA-256 prefix of the plugin verification public key
+- `waiver_signing_key_fp`: SHA-256 prefix of the waiver verification public key
+- `anchor_key_fp`: SHA-256 prefix of the anchor signing public key
+
+Fingerprints are sealed into the entry hash. Changing a fingerprint after the fact breaks the hash chain. This enables forensic identification of which trust root was active for any given ledger entry, and makes key rotation boundaries visible.
 
 ### Trust Assumptions
 
@@ -100,6 +111,7 @@ The system is single-tenant, single-writer. There is no multi-user access contro
 2. **Ed25519 signatures are unforgeable without the private key.** Plugin and waiver verification depends on this.
 3. **The Corvusforge source code is unmodified.** The system does not verify its own integrity. A modified binary can bypass all checks.
 4. **The Python runtime is unmodified.** A compromised Python interpreter can bypass any Python-level check.
+5. **CI is inside the TCB for plugin signing and anchor export.** A compromised CI can forge plugins and anchors. CI is explicitly **not** trusted for waiver signing (see ADR-0007).
 
 ---
 
@@ -114,11 +126,13 @@ The TCB is the minimal set of components that must be correct for the security p
 | `run_ledger.py` | Hash chain computation and verification |
 | `artifact_store.py` | Content addressing (SHA-256 keying) |
 | `hasher.py` | All hash computations (`sha256_hex`, `canonical_json_bytes`) |
-| `crypto_bridge.py` | Ed25519 signature verification |
+| `crypto_bridge.py` | Ed25519 signature verification, key fingerprinting, trust context |
 | `waiver_manager.py` | Waiver signature enforcement |
 | `stage_machine.py` | Stage transition enforcement and prerequisite checking |
 | `prerequisite_graph.py` | Stage dependency definitions |
 | `envelope_bus.py` | Envelope validation (type checking, schema enforcement) |
+| `production_guard.py` | Production constraint enforcement at startup |
+| CI/CD pipeline | Plugin signing, anchor export (see ADR-0007) |
 | Python runtime | Execution environment |
 | SQLite | Ledger storage (UNIQUE constraints, WAL) |
 | Operating system | File I/O, process isolation |
@@ -166,5 +180,7 @@ The TCB is the minimal set of components that must be correct for the security p
 2. **No code execution sandbox for plugins.** A malicious plugin can execute arbitrary code.
 3. **No runtime integrity verification.** Corvusforge does not verify its own binaries or the Python runtime.
 4. **Single-writer assumption.** Multi-user access control is not modeled. If multiple users share a Corvusforge instance, there is no isolation between their operations.
-5. **Signing key management.** No HSM integration, no short-lived key support, no multi-party signing.
-6. **Anchor storage is operational, not enforced.** The system exports anchors but does not enforce where they are stored or that they are stored at all.
+5. **Signing key management.** No HSM integration, no short-lived key support, no multi-party signing. CI signing keys should migrate to HSM or short-lived keys as the deployment matures.
+6. **Anchor storage is operational, not enforced.** The system exports anchors but does not enforce where they are stored or that they are stored at all. Anchors stored alongside the repo provide zero additional security over the hash chain alone.
+7. **CI compromise scope.** Per ADR-0007, CI is inside the TCB for plugin signing and anchor export. A compromised CI can forge plugins and anchors. Waiver signing is excluded from CI, which limits blast radius. Future work: offline-only signing or HSM-backed CI signing.
+8. **Key loss recovery.** If an anchor key is lost, existing anchors remain valid (they're just data), but new anchors cannot be verified against the same trust root. The fingerprint trail in the ledger allows forensic identification of the affected window. A key loss does not invalidate the hash chain — only the external anchor verification.

@@ -99,8 +99,24 @@ Read every core module against the 16 invariants. Identified five risk areas, ca
 
 ---
 
+### Entry 9 — Trust Context: Key Fingerprint Recording
+**Date:** 2026-02-26
+**Problem:** No record of which signing keys were active when a ledger entry was created. A silent key rotation could invalidate historical entries without forensic visibility. Two runs using different trust roots look identical in the ledger.
+**Fix:** Added `trust_context` dict field to `LedgerEntry` and SQLite schema. Contains `plugin_trust_root_fp`, `waiver_signing_key_fp`, `anchor_key_fp` — SHA-256 prefixes (16 hex chars) of the active public keys. Fingerprints are sealed into the entry hash, making post-hoc modification detectable. Orchestrator computes trust context at construction time and passes it through all transitions.
+**Files changed:** `models/ledger.py`, `core/run_ledger.py` (schema + insert + read), `core/stage_machine.py` (pass-through), `core/orchestrator.py` (computation + wiring), `bridge/crypto_bridge.py` (new: `key_fingerprint`, `compute_trust_context`), `config.py` (new: key fields).
+**Lesson:** Recording provenance at write time is cheap. Reconstructing it after the fact is impossible.
+
+### Entry 10 — ADR-0007: CI Trust Boundary
+**Date:** 2026-02-26
+**Problem:** The threat model listed CI compromise as a Tier 3 threat but didn't explicitly state whether CI is inside the TCB for signing operations. This left an ambiguity: can a compromised CI forge valid artifacts?
+**Fix:** ADR-0007 explicitly classifies CI as inside the TCB for plugin signing and anchor export, but outside the TCB for waiver signing. Key separation requirements documented. Trust model and runbook updated with CI-specific guidance and anchor storage domain separation.
+**Lesson:** Implicit trust boundaries are non-boundaries. If a component can sign artifacts and you haven't said "this component is trusted to sign," you don't know what compromise means.
+
+---
+
 ## Summary
 
-**Final state:** 188 tests passing (135 original + 53 adversarial). All 6 hardening items implemented.
-**Production code changes:** 6 files modified. Zero new features. Zero API changes. Backward compatible.
-**Tests added:** 7 new test files in `tests/adversarial/`. 1 real bug found and fixed during writing.
+**Final state:** 214 tests passing (135 original + 69 adversarial + 10 trust rotation). All hardening items implemented.
+**Production code changes:** 9 files modified across two rounds. Zero new features. Zero API breaks. Backward compatible.
+**Documentation:** 7 ADRs, threat model, operational runbook, hardening log.
+**Tests added:** 9 test files in `tests/adversarial/`. 1 real bug found and fixed during writing.

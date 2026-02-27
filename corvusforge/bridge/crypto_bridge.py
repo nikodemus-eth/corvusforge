@@ -177,3 +177,51 @@ def hash_pin(pin: str, *, salt: bytes | None = None) -> str:
         return kr.hash_pin(pin, salt=salt)
 
     return _fallback_hash_pin(pin, salt=salt)
+
+
+def key_fingerprint(public_key: str) -> str:
+    """Compute a short fingerprint of a public key.
+
+    Returns the first 16 hex characters of SHA-256(public_key_bytes).
+    Used for recording which trust root was active at a given point,
+    without embedding the full key in ledger entries.
+    """
+    if not public_key:
+        return ""
+    digest = hashlib.sha256(public_key.encode("utf-8")).hexdigest()
+    return digest[:16]
+
+
+def compute_trust_context(
+    *,
+    plugin_trust_root: str = "",
+    waiver_signing_key: str = "",
+    anchor_key: str = "",
+) -> dict[str, str]:
+    """Build a trust context dict with fingerprints of active keys.
+
+    The trust context is recorded in every ledger entry so that forensic
+    analysis can determine which trust roots were active when the entry
+    was written.  If a key is rotated, the fingerprint change is visible
+    in the ledger.
+
+    Parameters
+    ----------
+    plugin_trust_root:
+        Public key used for plugin verification.
+    waiver_signing_key:
+        Public key used for waiver signature verification.
+    anchor_key:
+        Public key used for anchor signing (future).
+
+    Returns
+    -------
+    dict[str, str]
+        Keys: ``plugin_trust_root_fp``, ``waiver_signing_key_fp``,
+        ``anchor_key_fp``.  Empty string if no key is configured.
+    """
+    return {
+        "plugin_trust_root_fp": key_fingerprint(plugin_trust_root),
+        "waiver_signing_key_fp": key_fingerprint(waiver_signing_key),
+        "anchor_key_fp": key_fingerprint(anchor_key),
+    }
