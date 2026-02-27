@@ -127,9 +127,53 @@ Read every core module against the 16 invariants. Identified five risk areas, ca
 
 ---
 
+---
+
+## v0.4.0 Hardening (2026-02-27)
+
+### Entry 12 — PyNaCl Ed25519 Crypto Bridge (Phase 1)
+**Date:** 2026-02-27
+**Problem:** The crypto bridge had only two tiers: saoe-core (unavailable) and fail-closed stubs. `verify_data()` always returned `False`. `sign_data()` returned HMAC stubs. No real cryptographic verification was possible.
+**Fix:** Added PyNaCl (libsodium) as the middle tier. `generate_keypair()` produces real Ed25519 key-pairs via `nacl.signing.SigningKey`. `sign_data()` produces real 64-byte Ed25519 signatures. `verify_data()` cryptographically verifies signatures — returns `True` only on proof, `False` on any failure (malformed, wrong key, tampered data, empty). Added `is_native_crypto_available()` check.
+**Files changed:** `bridge/crypto_bridge.py`, `pyproject.toml` (added `PyNaCl>=1.5.0`).
+**Tests:** 12 new tests in `tests/unit/test_crypto_bridge.py`.
+**Lesson:** A fail-closed system with no working crypto tier is safe but useless. Adding real Ed25519 unlocked the entire verification chain: plugins, marketplace, waivers, and SAOE adapters all produce and verify real signatures now.
+
+### Entry 13 — Pluggable Agent Executors (Phase 2)
+**Date:** 2026-02-27
+**Problem:** `ThingsteadFleet` used inline `_StubAgentShim` and `_StubToolGate` classes with no way to swap in custom or production executor backends. The only extension path was saoe-core (unavailable).
+**Fix:** Introduced `typing.Protocol`-based `AgentExecutor` and `ToolGate` interfaces in `thingstead/executors.py`. Promoted stubs to `DefaultExecutor` and `DefaultToolGate`. Added `AllowlistToolGate` for restrictive tool control. Fleet constructor now accepts `executor_factory` and `tool_gate` parameters. Priority chain: saoe-core > user-provided > default.
+**Files changed:** New `thingstead/executors.py`, modified `thingstead/fleet.py`.
+**Tests:** 10 new tests in `tests/unit/test_fleet_executors.py`.
+**Lesson:** `Protocol` with `@runtime_checkable` gives structural typing without forcing inheritance. Existing saoe-core integration paths work unchanged while new backends can be plugged in.
+
+### Entry 14 — SQLite-Backed Transport Queue (Phase 3)
+**Date:** 2026-02-27
+**Problem:** When saoe-openclaw was unavailable, the `Transport` used a volatile in-memory `deque`. Messages were lost on process restart. Unbounded growth was possible in long pipeline runs.
+**Fix:** Added `queue_db_path` parameter to `Transport`. When provided, uses a SQLite table (`id AUTOINCREMENT`, `payload BLOB`, `created_at`) for persistent FIFO. `send()` inserts; `receive()` atomically selects oldest + deletes. Queue is bounded at `max_local_queue` depth. Context manager support for clean shutdown.
+**Files changed:** `bridge/transport.py`.
+**Tests:** 10 new tests in `tests/unit/test_transport.py`.
+**Lesson:** SQLite is the right persistence layer for a local-first system. WAL mode handles concurrent readers, AUTOINCREMENT guarantees FIFO ordering, and atomic transactions prevent message loss.
+
+### Entry 15 — Marketplace Real Crypto Verification (Phase 5)
+**Date:** 2026-02-27
+**Problem:** `Marketplace.verify_listing()` checked `is_saoe_crypto_available()` only. With saoe-core absent, all listings remained unverified regardless of signature quality.
+**Fix:** Added `verification_public_key` parameter to `Marketplace.__init__`. `verify_listing()` now checks `is_native_crypto_available()` (from Entry 12) in addition to saoe-core. Passes the configured trust root key to `verify_data()`. Explicit fail-closed: missing key = unverified, empty signature = unverified, crypto unavailable = unverified.
+**Files changed:** `marketplace/marketplace.py`.
+**Tests:** 5 new tests in `tests/unit/test_marketplace_crypto.py` (publish-sign-verify round-trip, wrong key, tampered content, empty signature, end-to-end).
+**Lesson:** Wiring real crypto into a verification-ready architecture is trivial once the crypto bridge works. The marketplace code already had the right structure — it just needed a working `verify_data()` and a configured trust root.
+
+---
+
 ## Summary
 
+### v0.3.0 Hardening
 **Final state:** 238 tests passing (135 original + 69 adversarial + 10 trust rotation + 24 trust enforcement/monitor). All hardening items implemented.
 **Production code changes:** 11 files modified across three rounds. Zero new features. Zero API breaks. Backward compatible.
 **Documentation:** 7 ADRs, threat model, operational runbook, hardening log.
 **Tests added:** 10 test files in `tests/adversarial/` + `tests/unit/`. 1 real bug found and fixed during writing.
+
+### v0.4.0 Hardening
+**Final state:** 387 tests passing (238 from v0.3.0 + 149 new tests across Phases 1-6).
+**Production code changes:** 6 files modified, 1 new file created. Real Ed25519 crypto, pluggable executors, SQLite transport, marketplace verification.
+**Tests added:** 13 new test files across unit tests. Zero regressions. Full backward compatibility.

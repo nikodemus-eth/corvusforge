@@ -117,6 +117,7 @@ class Marketplace:
         self,
         marketplace_dir: Path = Path(".corvusforge/marketplace/"),
         loader: PluginLoader | None = None,
+        verification_public_key: str = "",
     ) -> None:
         self._marketplace_dir = marketplace_dir
         self._marketplace_dir.mkdir(parents=True, exist_ok=True)
@@ -124,6 +125,7 @@ class Marketplace:
         self._packages_dir.mkdir(parents=True, exist_ok=True)
         self._local_catalog_path = self._marketplace_dir / "catalog.json"
         self._loader = loader
+        self._verification_public_key = verification_public_key
         self._listings: dict[str, MarketplaceListing] = {}
         self.load_catalog()
 
@@ -414,22 +416,33 @@ class Marketplace:
 
         try:
             from corvusforge.bridge.crypto_bridge import (
+                is_native_crypto_available,
                 is_saoe_crypto_available,
                 verify_data,
             )
 
-            if not is_saoe_crypto_available():
+            if not (is_saoe_crypto_available() or is_native_crypto_available()):
                 logger.warning(
                     "Crypto bridge unavailable — listing '%s' remains "
-                    "unverified (fail-closed). Install saoe-core for "
-                    "production verification.",
+                    "unverified (fail-closed). Install saoe-core or "
+                    "PyNaCl for production verification.",
                     name,
                 )
                 # Fail-closed: do NOT mark as verified.
                 return False
 
+            if not self._verification_public_key:
+                logger.warning(
+                    "No verification public key configured — listing '%s' "
+                    "remains unverified (fail-closed).",
+                    name,
+                )
+                return False
+
             manifest_bytes = canonical_json_bytes(file_hashes)
-            valid = verify_data(manifest_bytes, listing.signature, "")
+            valid = verify_data(
+                manifest_bytes, listing.signature, self._verification_public_key
+            )
             updated = listing.model_copy(update={"verified": valid})
             self._listings[name] = updated
             self.persist_catalog()

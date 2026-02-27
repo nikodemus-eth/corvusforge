@@ -1,5 +1,29 @@
 # Corvusforge Changelog
 
+## [0.4.0] - 2026-02-27
+### Added
+- Real Ed25519 crypto via PyNaCl (libsodium) — three-tier priority chain: saoe-core > PyNaCl > fail-closed
+- Pluggable agent executors via `typing.Protocol` (`AgentExecutor`, `ToolGate`, `AllowlistToolGate`)
+- SQLite-backed persistent transport queue (crash-safe, bounded, FIFO)
+- Local envelope serialization (`to_local`/`from_local`) without saoe-core dependency
+- Marketplace Ed25519 signature verification with configurable trust root key
+- Architecture documentation (`docs/architecture.md`)
+- API reference documentation (`docs/api-reference.md`)
+- Quickstart guide (`docs/quickstart.md`)
+- CLAUDE.md project identity file
+- 149 new tests across 13 test files (unit + edge-case coverage)
+
+### Changed
+- Crypto bridge now produces real Ed25519 signatures (was HMAC stubs)
+- `verify_data()` now returns `True` for valid signatures (was always `False`)
+- `ThingsteadFleet` accepts `executor_factory` and `tool_gate` parameters
+- `Transport` accepts `queue_db_path` for persistent queue mode
+- `Marketplace.__init__` accepts `verification_public_key` parameter
+- Hardening log updated with entries 12-15
+
+### Removed
+- `_fallback_sign()` HMAC stub (replaced by real PyNaCl signing)
+
 ## [0.3.0] - 2026-02-27
 ### Added
 - Production hardening: Docker, CI/CD, env-driven config, observability hooks

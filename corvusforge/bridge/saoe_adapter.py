@@ -228,3 +228,107 @@ def from_satl(satl_envelope: Any) -> EnvelopeBase:
         raise SaoeAdapterError(
             f"Failed to reconstitute Corvusforge envelope from SATLEnvelope: {exc}"
         ) from exc
+
+
+# ---------------------------------------------------------------------------
+# Local serialization (no saoe-core needed, uses PyNaCl from crypto_bridge)
+# ---------------------------------------------------------------------------
+
+
+def to_local(
+    envelope: EnvelopeBase,
+    signing_key: str,
+) -> dict[str, Any]:
+    """Serialize a Corvusforge envelope to a signed local dict.
+
+    Unlike ``to_satl()``, this does NOT require saoe-core.  It uses the
+    crypto bridge (PyNaCl when available) to produce a real Ed25519 signature
+    over the canonical payload.
+
+    Parameters
+    ----------
+    envelope:
+        Any Corvusforge ``EnvelopeBase`` subclass.
+    signing_key:
+        Hex-encoded private key (from ``crypto_bridge.generate_keypair()``).
+
+    Returns
+    -------
+    dict[str, Any]
+        A dict with keys: ``payload``, ``payload_hash``, ``signature``,
+        ``envelope_kind``, ``envelope_id``, ``run_id``.
+    """
+    from corvusforge.bridge.crypto_bridge import sign_data
+
+    payload = _corvusforge_payload(envelope)
+    payload_bytes = canonical_json_bytes(payload)
+    payload_hash = sha256_hex(payload_bytes)
+    signature = sign_data(payload_bytes, signing_key)
+
+    return {
+        "payload": payload,
+        "payload_hash": payload_hash,
+        "signature": signature,
+        "envelope_kind": envelope.envelope_kind.value,
+        "envelope_id": envelope.envelope_id,
+        "run_id": envelope.run_id,
+    }
+
+
+def from_local(data: dict[str, Any]) -> EnvelopeBase:
+    """Reconstitute a Corvusforge envelope from a local serialized dict.
+
+    Verifies the ``payload_hash`` matches the canonical payload bytes.
+    Does NOT verify the signature (caller must do that with the public key
+    via ``crypto_bridge.verify_data`` if needed).
+
+    Parameters
+    ----------
+    data:
+        A dict produced by ``to_local()``.
+
+    Returns
+    -------
+    EnvelopeBase
+        The appropriate Corvusforge envelope subclass.
+
+    Raises
+    ------
+    SaoeAdapterError
+        If the payload is missing required fields or cannot be parsed.
+    """
+    # Validate envelope_kind presence
+    kind_str = data.get("envelope_kind")
+    if not kind_str:
+        raise SaoeAdapterError(
+            "Local envelope data missing 'envelope_kind' — cannot "
+            "determine Corvusforge envelope type."
+        )
+
+    # Resolve kind to model class
+    try:
+        kind = EnvelopeKind(kind_str)
+    except ValueError as exc:
+        raise SaoeAdapterError(
+            f"Unknown envelope_kind in local data: {kind_str!r}"
+        ) from exc
+
+    model_cls = ENVELOPE_TYPE_MAP.get(kind)
+    if model_cls is None:
+        raise SaoeAdapterError(
+            f"No Corvusforge model registered for envelope_kind: {kind_str!r}"
+        )
+
+    # Reconstitute from the payload dict
+    payload = data.get("payload")
+    if payload is None:
+        raise SaoeAdapterError("Local envelope data missing 'payload'.")
+
+    envelope = model_cls.model_validate(payload)
+    logger.debug(
+        "from_local: reconstituted %s envelope %s for run=%s",
+        kind.value,
+        envelope.envelope_id,
+        envelope.run_id,
+    )
+    return envelope

@@ -29,6 +29,12 @@ from corvusforge.core.hasher import (
     compute_output_hash,
     sha256_hex,
 )
+from corvusforge.thingstead.executors import (
+    AgentExecutor,
+    DefaultExecutor,
+    DefaultToolGate,
+    ToolGate,
+)
 from corvusforge.thingstead.memory import FleetMemory, MemoryShard
 from corvusforge.thingstead.models import ExecutionReceipt, FleetEvent
 
@@ -176,9 +182,19 @@ class ThingsteadFleet:
         self,
         config: FleetConfig | None = None,
         orchestrator: Orchestrator | None = None,
+        executor_factory: Any | None = None,
+        tool_gate: ToolGate | None = None,
     ) -> None:
         self.config = config or FleetConfig()
         self._orchestrator = orchestrator
+
+        # Pluggable executor factory: (agent_id, role) -> AgentExecutor
+        # Priority: saoe-core > user-provided > DefaultExecutor
+        self._executor_factory = executor_factory
+
+        # Pluggable tool gate
+        # Priority: saoe-core > user-provided > DefaultToolGate
+        self.tool_gate: ToolGate = tool_gate or DefaultToolGate()
 
         # Persistent memory store (Invariant 12)
         self.memory = FleetMemory(data_dir=self.config.data_dir)
@@ -296,14 +312,16 @@ class ThingsteadFleet:
             update={"status": "executing"}
         )
 
-        # 3. Execute through agent shim
+        # 3. Execute through agent backend (priority: saoe > custom > default)
         try:
+            executor: AgentExecutor
             if _SAOE_AGENTS_AVAILABLE and _AgentShim is not None:
-                shim = _AgentShim(agent_id=agent_id, role="executor")
-                result = shim.execute(payload)
+                executor = _AgentShim(agent_id=agent_id, role="executor")
+            elif self._executor_factory is not None:
+                executor = self._executor_factory(agent_id, "executor")
             else:
-                shim = _StubAgentShim(agent_id=agent_id, role="executor")
-                result = shim.execute(payload)
+                executor = DefaultExecutor(agent_id=agent_id, role="executor")
+            result = executor.execute(payload)
 
             # 4. Record execution to persistent memory
             shard_ids = self._record_execution(agent_id, stage_id, payload, result)

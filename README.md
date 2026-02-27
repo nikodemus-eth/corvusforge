@@ -4,15 +4,23 @@
 
 Built on [SAOE](https://github.com/nikodemus-eth/saoe-mvp) | Powered by Thingstead
 
-**v0.3.0 PRODUCTION** — Private repo by default.
+**v0.4.0 PRODUCTION** — Private repo by default.
 
 ```bash
-pip install corvusforge==0.3.0
+pip install corvusforge==0.4.0
 corvusforge ui          # Full Streamlit dashboard
 corvusforge new         # Start a pipeline run
 corvusforge demo        # End-to-end demo
 corvusforge plugins     # List installed DLC plugins
 ```
+
+## What's New in v0.4.0
+
+- **Real Ed25519 crypto** via PyNaCl (libsodium) — three-tier priority: saoe-core > PyNaCl > fail-closed
+- **Pluggable agent executors** — Protocol-based backends with AllowlistToolGate
+- **SQLite-backed transport** — persistent, crash-safe message queue
+- **Marketplace verification** — Ed25519 signature verification on DLC packages
+- **387 tests** (up from 238) with edge-case and adversarial coverage
 
 ## Core Invariants (16)
 
@@ -54,21 +62,36 @@ The Build Monitor is a projection of the Run Ledger. It does not compute truth. 
 
 Every run is replayable. Every transition is ledger-recorded. Every artifact is content-addressed.
 
+## Dependencies
+
+- **Core**: `pydantic>=2.0`, `PyNaCl>=1.5.0`, `typer[all]>=0.9`, `rich>=13.0`
+- **Dashboard**: `streamlit>=1.30`
+- **Dev**: `pytest>=8.0`, `pytest-cov`
+
 ## Production Deployment
 
 ```bash
 # Local
-pip install corvusforge[prod]==0.3.0
+pip install corvusforge[prod]==0.4.0
 corvusforge ui
 
 # Docker
-docker-compose up --build
+docker build -t corvusforge:0.4.0 .
+docker run -p 8501:8501 corvusforge:0.4.0
 
 # CI/CD
 git push  # triggers full test + Docker build
 ```
 
-See [CHANGELOG.md](CHANGELOG.md) and [RELEASE_NOTES_v0.3.0.md](RELEASE_NOTES_v0.3.0.md) for details.
+## Documentation
+
+- [Architecture](docs/architecture.md) — component diagram, data flow, trust boundaries
+- [API Reference](docs/api-reference.md) — public interfaces for all subsystems
+- [Quickstart](docs/quickstart.md) — install, first run, Docker, Python API
+- [Hardening Log](docs/hardening-log.md) — security audit history (15 entries)
+- [ADRs](docs/adr/) — architectural decision records
+
+See also [CHANGELOG.md](CHANGELOG.md) and [RELEASE_NOTES_v0.4.0.md](RELEASE_NOTES_v0.4.0.md) for release details.
 
 ## License
 
@@ -79,4 +102,4 @@ See [LICENSE](LICENSE) for the full text.
 
 ---
 
-Status: v0.3.0 production-grade. Foundation locked. Ready for enterprise.
+Status: v0.4.0 production-grade. Real Ed25519 crypto. 387 tests. Foundation locked.
