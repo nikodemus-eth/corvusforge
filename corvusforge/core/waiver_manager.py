@@ -51,9 +51,11 @@ class WaiverManager:
         artifact_store: ContentAddressedStore,
         *,
         require_signature: bool = False,
+        waiver_verification_key: str = "",
     ) -> None:
         self._store = artifact_store
         self._require_signature = require_signature
+        self._waiver_verification_key = waiver_verification_key
         # In-memory registry: scope -> list of (waiver, signature_verified) tuples
         self._waivers: dict[str, list[tuple[WaiverArtifact, bool]]] = {}
 
@@ -154,18 +156,31 @@ class WaiverManager:
     # Signature verification
     # ------------------------------------------------------------------
 
-    @staticmethod
-    def _verify_waiver_signature(waiver: WaiverArtifact) -> bool:
+    def _verify_waiver_signature(self, waiver: WaiverArtifact) -> bool:
         """Verify the Ed25519 signature on a waiver artifact.
 
-        Returns ``True`` only if the signature is present and
-        cryptographically valid against ``approving_identity``.
+        Returns ``True`` only if:
+        1. The waiver has a signature.
+        2. A waiver verification key is configured (fail-closed if empty).
+        3. The signature verifies against the configured key
+           (NOT against ``approving_identity``, which is informational only).
+
         Returns ``False`` in all other cases (missing signature,
-        unavailable crypto, verification failure, exception).
+        empty verification key, unavailable crypto, verification failure,
+        exception).
         """
         if not waiver.signature:
             logger.debug(
                 "Waiver %s has no signature.", waiver.waiver_id
+            )
+            return False
+
+        # Fail-closed: no configured verification key → cannot verify
+        if not self._waiver_verification_key:
+            logger.warning(
+                "No waiver verification key configured — waiver %s "
+                "signature cannot be verified (fail-closed).",
+                waiver.waiver_id,
             )
             return False
 
@@ -183,7 +198,9 @@ class WaiverManager:
                 )
                 return False
 
-            # Build the canonical payload that was signed
+            # Build the canonical payload that was signed.
+            # approving_identity is part of the payload (informational),
+            # but it is NOT the verification key.
             payload = canonical_json_bytes({
                 "waiver_id": waiver.waiver_id,
                 "scope": waiver.scope,
@@ -192,10 +209,11 @@ class WaiverManager:
                 "approving_identity": waiver.approving_identity,
                 "risk_classification": waiver.risk_classification.value,
             })
+            # Authority comes from the configured trust root, not the waiver
             valid = verify_data(
                 payload,
                 waiver.signature,
-                waiver.approving_identity,
+                self._waiver_verification_key,
             )
             if not valid:
                 logger.warning(

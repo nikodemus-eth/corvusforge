@@ -375,8 +375,9 @@ class Marketplace:
         Returns
         -------
         bool
-            ``True`` if verified or crypto is unavailable (with warning).
-            ``False`` if verification explicitly fails.
+            ``True`` only if the signature was cryptographically confirmed.
+            ``False`` in all other cases (missing, unsigned, unavailable
+            crypto, verification failure, or exception).  **Fail-closed.**
         """
         listing = self._listings.get(name)
         if listing is None:
@@ -419,14 +420,13 @@ class Marketplace:
 
             if not is_saoe_crypto_available():
                 logger.warning(
-                    "Crypto bridge unavailable — marking '%s' as verified "
-                    "(install saoe-core for production).",
+                    "Crypto bridge unavailable — listing '%s' remains "
+                    "unverified (fail-closed). Install saoe-core for "
+                    "production verification.",
                     name,
                 )
-                updated = listing.model_copy(update={"verified": True})
-                self._listings[name] = updated
-                self.persist_catalog()
-                return True
+                # Fail-closed: do NOT mark as verified.
+                return False
 
             manifest_bytes = canonical_json_bytes(file_hashes)
             valid = verify_data(manifest_bytes, listing.signature, "")
@@ -441,14 +441,12 @@ class Marketplace:
 
         except Exception:
             logger.exception(
-                "Error verifying listing '%s' — treating as verified "
-                "(crypto unavailable).",
+                "Error verifying listing '%s' — listing remains "
+                "unverified (fail-closed).",
                 name,
             )
-            updated = listing.model_copy(update={"verified": True})
-            self._listings[name] = updated
-            self.persist_catalog()
-            return True
+            # Fail-closed: do NOT mark as verified on exception.
+            return False
 
     # -- Persistence --------------------------------------------------------
 

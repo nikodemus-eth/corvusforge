@@ -130,8 +130,11 @@ class PluginRegistry:
     def __init__(
         self,
         registry_path: Path = Path(".corvusforge/plugins/registry.json"),
+        *,
+        plugin_trust_root_key: str = "",
     ) -> None:
         self._registry_path = registry_path
+        self._plugin_trust_root_key = plugin_trust_root_key
         self._plugins: dict[str, PluginEntry] = {}
         self.load()
 
@@ -280,6 +283,15 @@ class PluginRegistry:
                 # Fail-closed: do NOT mark as verified.
                 return False
 
+            # Fail-closed: no configured trust root → cannot verify
+            if not self._plugin_trust_root_key:
+                logger.warning(
+                    "No plugin trust root key configured — plugin '%s' "
+                    "remains unverified (fail-closed).",
+                    name,
+                )
+                return False
+
             # Build the data payload that was originally signed.
             from corvusforge.core.hasher import canonical_json_bytes
 
@@ -288,9 +300,9 @@ class PluginRegistry:
                 "version": entry.version,
                 "entry_point": entry.entry_point,
             })
-            # Use a well-known public key — in a real deployment this comes
-            # from the marketplace or ToolGate key configuration.
-            valid = verify_data(payload, entry.signature, entry.metadata.get("public_key", ""))
+            # Authority comes from the configured trust root, NOT from
+            # plugin-supplied metadata (which is attacker-controlled).
+            valid = verify_data(payload, entry.signature, self._plugin_trust_root_key)
             updated = entry.model_copy(update={"verified": valid})
             self._plugins[name] = updated
             self.persist()

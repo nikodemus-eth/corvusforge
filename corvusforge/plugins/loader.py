@@ -32,6 +32,10 @@ from corvusforge.plugins.registry import PluginEntry, PluginKind, PluginRegistry
 logger = logging.getLogger(__name__)
 
 
+class PluginVerificationError(RuntimeError):
+    """Raised when a DLC package fails verification in a context that requires it."""
+
+
 # ---------------------------------------------------------------------------
 # DLC models
 # ---------------------------------------------------------------------------
@@ -134,10 +138,13 @@ class PluginLoader:
         self,
         plugins_dir: Path = Path(".corvusforge/plugins/installed/"),
         registry: PluginRegistry | None = None,
+        *,
+        require_verified: bool = False,
     ) -> None:
         self._plugins_dir = plugins_dir
         self._plugins_dir.mkdir(parents=True, exist_ok=True)
         self._registry = registry
+        self._require_verified = require_verified
 
     # -- Public API ---------------------------------------------------------
 
@@ -191,6 +198,12 @@ class PluginLoader:
 
         # Verify signature
         verified = self.verify_dlc(package_path)
+
+        # Enforcement: refuse unverified DLC when required (production mode)
+        if self._require_verified and not verified:
+            raise PluginVerificationError(
+                f"DLC package failed verification and cannot be loaded: {package_path}"
+            )
 
         entry = PluginEntry(
             name=manifest.name,

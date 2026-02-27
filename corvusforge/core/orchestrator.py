@@ -69,6 +69,7 @@ class Orchestrator:
         self.waiver_manager = WaiverManager(
             self.artifact_store,
             require_signature=production_waiver_signature_required(self._prod_config),
+            waiver_verification_key=self._prod_config.waiver_signing_key,
         )
         self.version_pinner = VersionPinner(self.config.version_pin)
         self.envelope_bus = EnvelopeBus()

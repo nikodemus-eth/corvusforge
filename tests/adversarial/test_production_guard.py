@@ -142,13 +142,16 @@ class TestVerificationNeverAutoPromotes:
         result = loader.verify_dlc(tmp_path / "nonexistent.dlc")
         assert result is False
 
-    def test_waiver_signature_verify_returns_false_for_unsigned(self):
+    def test_waiver_signature_verify_returns_false_for_unsigned(self, tmp_path):
         """An unsigned waiver must verify as False."""
         from datetime import datetime, timedelta, timezone
 
+        from corvusforge.core.artifact_store import ContentAddressedStore
         from corvusforge.core.waiver_manager import WaiverManager
         from corvusforge.models.waivers import RiskClassification, WaiverArtifact
 
+        store = ContentAddressedStore(tmp_path / "artifacts")
+        mgr = WaiverManager(store, waiver_verification_key="some-key")
         waiver = WaiverArtifact(
             scope="test_scope",
             justification="test",
@@ -157,16 +160,19 @@ class TestVerificationNeverAutoPromotes:
             risk_classification=RiskClassification.LOW,
             signature="",  # unsigned
         )
-        result = WaiverManager._verify_waiver_signature(waiver)
+        result = mgr._verify_waiver_signature(waiver)
         assert result is False
 
-    def test_waiver_signature_verify_returns_false_for_garbage(self):
+    def test_waiver_signature_verify_returns_false_for_garbage(self, tmp_path):
         """A waiver with a garbage signature must verify as False."""
         from datetime import datetime, timedelta, timezone
 
+        from corvusforge.core.artifact_store import ContentAddressedStore
         from corvusforge.core.waiver_manager import WaiverManager
         from corvusforge.models.waivers import RiskClassification, WaiverArtifact
 
+        store = ContentAddressedStore(tmp_path / "artifacts")
+        mgr = WaiverManager(store, waiver_verification_key="some-key")
         waiver = WaiverArtifact(
             scope="test_scope",
             justification="test",
@@ -175,7 +181,7 @@ class TestVerificationNeverAutoPromotes:
             risk_classification=RiskClassification.LOW,
             signature="AAAA_not_a_real_signature_ZZZZ",
         )
-        result = WaiverManager._verify_waiver_signature(waiver)
+        result = mgr._verify_waiver_signature(waiver)
         assert result is False
 
 
