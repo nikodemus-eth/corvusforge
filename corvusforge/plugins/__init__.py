@@ -4,7 +4,7 @@ Invariant 13: All DLC plugins must be signed and verified through ToolGate + SAT
 Plugins extend pipeline stages, add new sinks, or provide custom validators.
 """
 
-from corvusforge.plugins.registry import PluginRegistry, PluginEntry
-from corvusforge.plugins.loader import PluginLoader, DLCPackage
+from corvusforge.plugins.loader import DLCPackage, PluginLoader
+from corvusforge.plugins.registry import PluginEntry, PluginRegistry
 
 __all__ = ["PluginRegistry", "PluginEntry", "PluginLoader", "DLCPackage"]

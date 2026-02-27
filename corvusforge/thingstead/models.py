@@ -96,7 +96,9 @@ class FleetEvent(BaseModel):
         default_factory=lambda: uuid.uuid4().hex
     )
     fleet_id: str
-    event_type: str  # "agent_spawned" | "agent_completed" | "agent_failed" | "fleet_shutdown" | "memory_persisted"
+    # "agent_spawned" | "agent_completed" | "agent_failed"
+    # | "fleet_shutdown" | "memory_persisted"
+    event_type: str
     details: dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)

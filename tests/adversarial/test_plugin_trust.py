@@ -13,10 +13,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
-from corvusforge.plugins.registry import PluginEntry, PluginKind, PluginRegistry
 from corvusforge.plugins.loader import PluginLoader
+from corvusforge.plugins.registry import PluginEntry, PluginKind, PluginRegistry
 
 
 class TestPluginVerificationFailClosed:

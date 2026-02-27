@@ -11,9 +11,9 @@ all 10 core invariants through its component subsystems.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from corvusforge.bridge.crypto_bridge import compute_trust_context
 from corvusforge.config import ProdConfig
@@ -75,7 +75,8 @@ class Orchestrator:
         self.envelope_bus = EnvelopeBus()
 
         # Run state
-        self.run_id = run_id or f"cf-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}-{uuid.uuid4().hex[:3]}"
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        self.run_id = run_id or f"cf-{ts}-{uuid.uuid4().hex[:3]}"
         self.run_config: RunConfig | None = None
 
         # Trust context — key fingerprints recorded in every ledger entry

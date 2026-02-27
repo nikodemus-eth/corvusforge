@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from corvusforge.core.version_pinner import VersionPinner, VersionDriftError
+from corvusforge.core.version_pinner import VersionDriftError, VersionPinner
 from corvusforge.models.versioning import VersionPin
 
 

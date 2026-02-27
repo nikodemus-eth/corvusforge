@@ -256,7 +256,7 @@ class MonitorProjection:
                 if to_str == StageState.BLOCKED.value:
                     # Try to determine block reason from entry context
                     result[stage_id]["block_reason"] = (
-                        f"Blocked by upstream dependency"
+                        "Blocked by upstream dependency"
                     )
 
         return result
@@ -265,7 +265,6 @@ class MonitorProjection:
         """Find unresolved clarification entries."""
         # Clarifications are tracked by envelope_ids in the entry details
         # For now, detect stages in BLOCKED state that might need clarification
-        clarification_stages: list[str] = []
         blocked_stages: set[str] = set()
 
         for entry in entries:

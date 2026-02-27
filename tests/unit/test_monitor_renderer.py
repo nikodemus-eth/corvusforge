@@ -8,15 +8,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-import pytest
-
 from rich.console import Console
 from rich.panel import Panel
 
 from corvusforge.models.stages import StageState
 from corvusforge.monitor.projection import MonitorSnapshot, StageStatus
-from corvusforge.monitor.renderer import MonitorRenderer, _STATE_STYLES, _STATE_ICONS
-
+from corvusforge.monitor.renderer import _STATE_ICONS, _STATE_STYLES, MonitorRenderer
 
 # ---------------------------------------------------------------------------
 # Helpers

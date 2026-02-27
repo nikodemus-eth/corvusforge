@@ -25,7 +25,7 @@ class RoutingSink(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    sink_type: str  # "local_file", "artifact_store", "telegram_notify_payload", "email_notify_payload"
+    sink_type: str  # "local_file", "artifact_store", "telegram", "email"
     config: dict[str, Any] = {}
     enabled: bool = True
 

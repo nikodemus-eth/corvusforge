@@ -22,8 +22,6 @@ from corvusforge.core.orchestrator import Orchestrator
 from corvusforge.core.run_ledger import LedgerIntegrityError, RunLedger
 from corvusforge.models.config import PipelineConfig
 from corvusforge.models.ledger import LedgerEntry
-from corvusforge.models.stages import StageState
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -167,13 +165,10 @@ class TestTrustRootRotation:
             environment="development",
             plugin_trust_root="key-beta-public",
         )
-        orch_beta = Orchestrator(
+        Orchestrator(
             config=pipeline_config, prod_config=config_beta, run_id="rotation-run"
         )
         # Manually append a transition with the new trust context
-        from corvusforge.core.stage_machine import StageMachine
-        from corvusforge.core.prerequisite_graph import PrerequisiteGraph
-        from corvusforge.models.stages import DEFAULT_STAGE_DEFINITIONS
 
         ledger = RunLedger(pipeline_config.ledger_db_path)
         fp_beta = key_fingerprint("key-beta-public")
@@ -301,7 +296,6 @@ class TestTrustContextVersion:
         self, pipeline_config: PipelineConfig, tmp_path: Path
     ):
         """Changing trust_context_version should produce a different entry_hash."""
-        import json
         import sqlite3
 
         ledger = RunLedger(pipeline_config.ledger_db_path)

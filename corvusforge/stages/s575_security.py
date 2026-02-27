@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import logging
 import re
-from datetime import datetime, timezone
 from typing import Any, ClassVar
 
 from corvusforge.core.hasher import content_address
@@ -74,7 +73,13 @@ _SECURITY_CHECKS: list[dict[str, str]] = [
 # Patterns for secrets scanning.
 _SECRET_PATTERNS: list[dict[str, str]] = [
     {"name": "aws_key", "pattern": r"AKIA[0-9A-Z]{16}"},
-    {"name": "generic_secret", "pattern": r"(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*['\"][^'\"]{8,}"},
+    {
+        "name": "generic_secret",
+        "pattern": (
+            r"(?i)(api[_-]?key|secret|token|password)"
+            r"\s*[:=]\s*['\"][^'\"]{8,}"
+        ),
+    },
     {"name": "private_key", "pattern": r"-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----"},
     {"name": "github_token", "pattern": r"gh[ps]_[A-Za-z0-9_]{36,}"},
 ]
@@ -82,7 +87,13 @@ _SECRET_PATTERNS: list[dict[str, str]] = [
 # Patterns for static analysis — detecting dangerous function calls.
 _STATIC_PATTERNS: list[dict[str, str]] = [
     {"check_id": "sec-static-001", "pattern": r"\beval\s*\("},
-    {"check_id": "sec-static-002", "pattern": r"(?i)(?:select|insert|update|delete)\s+.*?\+\s*(?:str\(|f['\"])"},
+    {
+        "check_id": "sec-static-002",
+        "pattern": (
+            r"(?i)(?:select|insert|update|delete)"
+            r"\s+.*?\+\s*(?:str\(|f['\"])"
+        ),
+    },
     {"check_id": "sec-static-003", "pattern": r"\bpickle\.loads?\b|\byaml\.load\s*\((?!.*Loader)"},
 ]
 
@@ -117,7 +128,7 @@ class SecurityGateStage(BaseStage):
         """
         run_id: str = run_context.get("run_id", "")
 
-        s5_result = run_context.get("stage_results", {}).get(
+        run_context.get("stage_results", {}).get(
             "s5_implementation", {}
         )
         overrides: dict[str, Any] = run_context.get(
@@ -238,7 +249,10 @@ class SecurityGateStage(BaseStage):
                                 "",
                             ),
                             "location": f"{filepath}:{lineno}",
-                            "remediation": f"Review usage at {filepath}:{lineno} and replace with a safe alternative.",
+                            "remediation": (
+                                f"Review usage at {filepath}:{lineno} "
+                                "and replace with a safe alternative."
+                            ),
                             "cve_id": "",
                         })
 
@@ -268,7 +282,10 @@ class SecurityGateStage(BaseStage):
                             "severity": "critical",
                             "description": f"Potential {pat_spec['name']} detected.",
                             "location": f"{filepath}:{lineno}",
-                            "remediation": "Remove the secret and rotate the credential immediately.",
+                            "remediation": (
+                                "Remove the secret and rotate "
+                                "the credential immediately."
+                            ),
                             "cve_id": "",
                         })
 

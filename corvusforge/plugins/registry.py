@@ -272,7 +272,7 @@ class PluginRegistry:
             return False
 
         try:
-            from corvusforge.bridge.crypto_bridge import verify_data, is_saoe_crypto_available
+            from corvusforge.bridge.crypto_bridge import is_saoe_crypto_available, verify_data
 
             if not is_saoe_crypto_available():
                 logger.warning(

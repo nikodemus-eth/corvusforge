@@ -18,7 +18,6 @@ from datetime import datetime, timezone
 from typing import Any, ClassVar
 
 from corvusforge.core.hasher import content_address
-from corvusforge.models.config import RunConfig
 from corvusforge.stages.base import BaseStage
 
 logger = logging.getLogger(__name__)
@@ -51,7 +50,7 @@ class PrerequisitesSynthesisStage(BaseStage):
         Returns a structured dependency graph dict.
         """
         run_id: str = run_context.get("run_id", "")
-        run_config: RunConfig | None = run_context.get("run_config")
+        run_context.get("run_config")
         work_request: dict[str, Any] = run_context.get("work_request", {})
 
         # --- Discover required tools and runtimes ----------------------

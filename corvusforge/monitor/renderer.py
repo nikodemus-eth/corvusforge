@@ -27,7 +27,6 @@ from rich.text import Text
 from corvusforge.models.stages import StageState
 
 if TYPE_CHECKING:
-    from corvusforge.core.run_ledger import RunLedger
     from corvusforge.monitor.projection import MonitorProjection, MonitorSnapshot
 
 
@@ -118,7 +117,7 @@ class MonitorRenderer:
 
         return Panel(
             panel_content,
-            title=f"[bold]Corvusforge Build Monitor[/bold]",
+            title="[bold]Corvusforge Build Monitor[/bold]",
             subtitle=f"Last updated: {snapshot.last_updated.strftime('%Y-%m-%d %H:%M:%S UTC')}",
             border_style="blue",
             padding=(1, 2),
@@ -157,7 +156,11 @@ class MonitorRenderer:
                 )
             details = " | ".join(details_parts) if details_parts else "[dim]-[/dim]"
 
-            artifact_count = str(len(stage.artifact_refs)) if stage.artifact_refs else "[dim]0[/dim]"
+            artifact_count = (
+                str(len(stage.artifact_refs))
+                if stage.artifact_refs
+                else "[dim]0[/dim]"
+            )
 
             table.add_row(
                 ordinal,

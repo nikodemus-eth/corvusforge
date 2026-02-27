@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable
 
 from pydantic import BaseModel, ConfigDict, Field
 

@@ -11,13 +11,12 @@ from pathlib import Path
 
 import pytest
 
-from corvusforge.core.orchestrator import Orchestrator
-from corvusforge.core.run_ledger import RunLedger
 from corvusforge.core.artifact_store import ContentAddressedStore
-from corvusforge.core.waiver_manager import WaiverManager, WaiverExpiredError
+from corvusforge.core.orchestrator import Orchestrator
+from corvusforge.core.waiver_manager import WaiverExpiredError, WaiverManager
 from corvusforge.models.config import PipelineConfig
 from corvusforge.models.stages import StageState
-from corvusforge.models.waivers import WaiverArtifact, RiskClassification
+from corvusforge.models.waivers import RiskClassification, WaiverArtifact
 from corvusforge.monitor.projection import MonitorProjection
 
 
@@ -52,7 +51,7 @@ class TestFullPipeline:
 
         # Execute s1 through s4 (no prerequisites beyond s0)
         for stage_id in ["s1_prerequisites", "s2_environment", "s3_test_contract", "s4_code_plan"]:
-            result = orch.execute_stage(stage_id)
+            orch.execute_stage(stage_id)
             assert orch.get_stage_state(stage_id) == StageState.PASSED
 
     def test_execute_s5_implementation(self, orch: Orchestrator):
@@ -61,7 +60,7 @@ class TestFullPipeline:
         for sid in ["s1_prerequisites", "s2_environment", "s3_test_contract", "s4_code_plan"]:
             orch.execute_stage(sid)
 
-        result = orch.execute_stage("s5_implementation")
+        orch.execute_stage("s5_implementation")
         assert orch.get_stage_state("s5_implementation") == StageState.PASSED
 
     def test_gate_stages_require_prerequisites(self, orch: Orchestrator):
@@ -77,7 +76,7 @@ class TestFullPipeline:
         orch.execute_stage("s575_security")
 
         # Now s6 should be executable
-        result = orch.execute_stage("s6_verification")
+        orch.execute_stage("s6_verification")
         assert orch.get_stage_state("s6_verification") == StageState.PASSED
 
     def test_full_pipeline_s0_to_s7(self, orch: Orchestrator):
@@ -123,7 +122,7 @@ class TestFullPipeline:
         )
         # First run: start and execute some stages
         orch1 = Orchestrator(config=config)
-        rc = orch1.start_run()
+        orch1.start_run()
         orch1.execute_stage("s1_prerequisites")
         run_id = orch1.run_id
 

@@ -16,7 +16,7 @@ from rich.panel import Panel
 
 from corvusforge.core.orchestrator import Orchestrator
 from corvusforge.models.config import PipelineConfig
-from corvusforge.models.stages import DEFAULT_STAGE_DEFINITIONS, StageState
+from corvusforge.models.stages import DEFAULT_STAGE_DEFINITIONS
 from corvusforge.monitor.projection import MonitorProjection
 from corvusforge.monitor.renderer import MonitorRenderer
 
@@ -70,7 +70,7 @@ def demo_cmd(
     console.print()
 
     # Start run (Stage 0 Intake is handled by start_run)
-    run_config = orchestrator.start_run(
+    orchestrator.start_run(
         prerequisites=[{"type": "demo", "description": "Demo prerequisites"}]
     )
     run_id = orchestrator.run_id
@@ -103,7 +103,10 @@ def demo_cmd(
 
     # Execute each stage with Build Monitor display
     for sd in stages_to_run:
-        console.print(f"\n[cyan]>>> Executing:[/cyan] [bold]{sd.display_name}[/bold] ({sd.stage_id})")
+        console.print(
+            f"\n[cyan]>>> Executing:[/cyan] "
+            f"[bold]{sd.display_name}[/bold] ({sd.stage_id})"
+        )
         time.sleep(delay)
 
         try:
@@ -132,10 +135,12 @@ def demo_cmd(
     console.print(
         Panel(
             "\n".join([
-                f"[bold green]Demo Complete![/bold green]",
+                "[bold green]Demo Complete![/bold green]",
                 "",
                 f"[bold]Run ID:[/bold]      {run_id}",
-                f"[bold]Stages:[/bold]      {final_snapshot.completed_count}/{final_snapshot.total_stages} completed",
+                f"[bold]Stages:[/bold]      "
+                f"{final_snapshot.completed_count}/"
+                f"{final_snapshot.total_stages} completed",
                 f"[bold]Artifacts:[/bold]   {final_snapshot.artifact_count}",
                 f"[bold]Chain:[/bold]       {'valid' if final_snapshot.chain_valid else 'BROKEN'}",
             ]),

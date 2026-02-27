@@ -11,11 +11,11 @@ from pathlib import Path
 
 import typer
 
-from corvusforge.cli.commands.new import new_cmd
 from corvusforge.cli.commands.demo import demo_cmd
 from corvusforge.cli.commands.monitor_cmd import monitor_cmd
-from corvusforge.cli.commands.saoe_status import saoe_status_cmd
+from corvusforge.cli.commands.new import new_cmd
 from corvusforge.cli.commands.release import release_cmd
+from corvusforge.cli.commands.saoe_status import saoe_status_cmd
 
 app = typer.Typer(
     name="corvusforge",
@@ -57,9 +57,8 @@ def plugins_cmd(
 
     console = Console()
     try:
-        from corvusforge.plugins.registry import PluginRegistry, PluginKind
-
         from corvusforge.config import config as _cfg
+        from corvusforge.plugins.registry import PluginKind, PluginRegistry
 
         registry = PluginRegistry(
             plugin_trust_root_key=_cfg.plugin_trust_root,

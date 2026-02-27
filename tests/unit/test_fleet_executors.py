@@ -10,8 +10,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import pytest
-
 from corvusforge.thingstead.executors import (
     AgentExecutor,
     AllowlistToolGate,
@@ -20,7 +18,6 @@ from corvusforge.thingstead.executors import (
     ToolGate,
 )
 from corvusforge.thingstead.fleet import FleetConfig, ThingsteadFleet
-
 
 # ---------------------------------------------------------------------------
 # Test: DefaultExecutor (promoted from _StubAgentShim)

@@ -23,11 +23,10 @@ from corvusforge.core.waiver_manager import (
     WaiverManager,
     WaiverSignatureError,
 )
-from corvusforge.marketplace.marketplace import Marketplace, MarketplaceListing
+from corvusforge.marketplace.marketplace import Marketplace
+from corvusforge.models.waivers import RiskClassification, WaiverArtifact
 from corvusforge.plugins.loader import PluginLoader, PluginVerificationError
 from corvusforge.plugins.registry import PluginEntry, PluginKind, PluginRegistry
-from corvusforge.models.waivers import RiskClassification, WaiverArtifact
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -336,6 +335,7 @@ class TestAllConstructionSitesWired:
         and formatting changes are handled correctly.
         """
         import ast
+
         import corvusforge
 
         package_root = Path(corvusforge.__file__).parent

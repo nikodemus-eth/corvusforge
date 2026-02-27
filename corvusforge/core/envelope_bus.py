@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from corvusforge.core.hasher import content_address, canonical_json_bytes, sha256_hex
+from corvusforge.core.hasher import canonical_json_bytes, sha256_hex
 from corvusforge.models.envelopes import (
     ENVELOPE_TYPE_MAP,
     EnvelopeBase,

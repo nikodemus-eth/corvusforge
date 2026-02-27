@@ -193,7 +193,7 @@ class VerificationStage(BaseStage):
         In the baseline this returns a minimal SBOM structure.  A future
         version will integrate with CycloneDX or SPDX tooling.
         """
-        run_config = run_context.get("run_config")
+        run_context.get("run_config")
         s1_result = run_context.get("stage_results", {}).get(
             "s1_prerequisites", {}
         )

@@ -57,7 +57,7 @@ def new_cmd(
     console.print(
         Panel(
             "\n".join([
-                f"[bold green]New pipeline run created![/bold green]",
+                "[bold green]New pipeline run created![/bold green]",
                 "",
                 f"[bold]Run ID:[/bold]          {orchestrator.run_id}",
                 f"[bold]Project:[/bold]         {project_name}",
@@ -66,7 +66,7 @@ def new_cmd(
                 f"[bold]Pipeline Version:[/bold] {config.version_pin.pipeline_version}",
                 f"[bold]Stages:[/bold]          {len(run_config.stage_plan)}",
                 "",
-                f"[dim]Stage 0 (Intake) completed. Run is ready.[/dim]",
+                "[dim]Stage 0 (Intake) completed. Run is ready.[/dim]",
             ]),
             title="[bold]Corvusforge[/bold]",
             border_style="green",

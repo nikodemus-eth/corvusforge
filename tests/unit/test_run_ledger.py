@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from corvusforge.core.run_ledger import RunLedger, LedgerIntegrityError
+from corvusforge.core.run_ledger import RunLedger
 from corvusforge.models.ledger import LedgerEntry
 
 

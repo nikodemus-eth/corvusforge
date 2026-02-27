@@ -6,7 +6,6 @@ import pytest
 
 from corvusforge.core.artifact_store import (
     ContentAddressedStore,
-    ArtifactIntegrityError,
 )
 from corvusforge.core.hasher import sha256_hex
 

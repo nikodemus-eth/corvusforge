@@ -38,7 +38,9 @@ _SAOE_AUDIT_AVAILABLE: bool = False
 _AuditLog: Any = None
 
 try:
-    from saoe_core.audit.events_sqlite import AuditLog as _SaoeAuditLog  # type: ignore[import-untyped]
+    from saoe_core.audit.events_sqlite import (
+        AuditLog as _SaoeAuditLog,  # type: ignore[import-untyped]
+    )
 
     _AuditLog = _SaoeAuditLog
     _SAOE_AUDIT_AVAILABLE = True

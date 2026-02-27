@@ -17,7 +17,6 @@ from corvusforge.stages.base import (
     StagePrerequisiteError,
 )
 
-
 # ---------------------------------------------------------------------------
 # Concrete test stage implementations
 # ---------------------------------------------------------------------------

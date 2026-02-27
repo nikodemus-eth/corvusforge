@@ -5,11 +5,10 @@ from __future__ import annotations
 import pytest
 
 from corvusforge.core.prerequisite_graph import (
-    PrerequisiteGraph,
     CyclicDependencyError,
+    PrerequisiteGraph,
 )
 from corvusforge.models.stages import (
-    DEFAULT_STAGE_DEFINITIONS,
     StageDefinition,
     StageState,
 )

@@ -21,7 +21,6 @@ from corvusforge.core.production_guard import (
     validate_trust_context_completeness,
 )
 
-
 # A valid production config must supply trust root keys.
 _PROD_TRUST_KEYS = {
     "plugin_trust_root": "test-prod-plugin-key-001",

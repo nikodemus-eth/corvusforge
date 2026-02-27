@@ -6,16 +6,13 @@ decision registry record/query/replay/summary.
 
 from __future__ import annotations
 
-import pytest
-
-from corvusforge.contrib.decisions import DecisionRegistry, DecisionSummary
+from corvusforge.contrib.decisions import DecisionRegistry
 from corvusforge.contrib.hooks import (
     HookOutcome,
     HookPriority,
     HookRecord,
     UserContributionHook,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test: UserContributionHook

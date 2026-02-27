@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from corvusforge.plugins.registry import PluginRegistry, PluginEntry, PluginKind
-from corvusforge.plugins.loader import PluginLoader, DLCPackage, DLCManifest
+from corvusforge.plugins.loader import DLCManifest, PluginLoader
+from corvusforge.plugins.registry import PluginEntry, PluginKind, PluginRegistry
 
 
 class TestPluginKind:

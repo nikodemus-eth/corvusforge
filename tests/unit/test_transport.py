@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from corvusforge.bridge.transport import Transport, is_saoe_transport_available
-from corvusforge.models.envelopes import EnvelopeKind, WorkOrderEnvelope
+from corvusforge.models.envelopes import WorkOrderEnvelope
 
 
 def _make_envelope(run_id: str = "run-1") -> WorkOrderEnvelope:

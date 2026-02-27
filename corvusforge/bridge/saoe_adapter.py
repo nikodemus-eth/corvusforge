@@ -15,7 +15,7 @@ This adapter sits at the boundary:
   reconstitutes the appropriate Corvusforge ``EnvelopeBase`` subclass.
 
 When ``saoe-core`` is not installed, both functions raise
-``SaoeAdapterUnavailable`` so callers can handle the missing dependency
+``SaoeAdapterUnavailableError`` so callers can handle the missing dependency
 explicitly rather than getting an opaque ``ImportError`` deep in a call
 stack.
 """
@@ -43,7 +43,9 @@ _SAOE_SATL_AVAILABLE: bool = False
 _SATLEnvelope: Any = None
 
 try:
-    from saoe_core.satl.envelope import SATLEnvelope as _SaoeSATLEnvelope  # type: ignore[import-untyped]
+    from saoe_core.satl.envelope import (
+        SATLEnvelope as _SaoeSATLEnvelope,  # type: ignore[import-untyped]
+    )
 
     _SATLEnvelope = _SaoeSATLEnvelope
     _SAOE_SATL_AVAILABLE = True
@@ -51,7 +53,7 @@ try:
 except ImportError:
     logger.warning(
         "saoe_core.satl.envelope not found — saoe_adapter.to_satl() / "
-        "from_satl() will raise SaoeAdapterUnavailable.  Install saoe-core "
+        "from_satl() will raise SaoeAdapterUnavailableError.  Install saoe-core "
         "for SATL transport."
     )
 
@@ -60,7 +62,7 @@ except ImportError:
 # Exceptions
 # ---------------------------------------------------------------------------
 
-class SaoeAdapterUnavailable(RuntimeError):
+class SaoeAdapterUnavailableError(RuntimeError):
     """Raised when a SATL operation is attempted without saoe-core installed."""
 
 
@@ -111,13 +113,13 @@ def to_satl(
 
     Raises
     ------
-    SaoeAdapterUnavailable
+    SaoeAdapterUnavailableError
         If ``saoe-core`` is not installed.
     SaoeAdapterError
         If the conversion fails for data-level reasons.
     """
     if not _SAOE_SATL_AVAILABLE or _SATLEnvelope is None:
-        raise SaoeAdapterUnavailable(
+        raise SaoeAdapterUnavailableError(
             "Cannot convert to SATLEnvelope — saoe-core is not installed.  "
             "Install saoe-core or handle this case in your transport layer."
         )
@@ -153,7 +155,7 @@ def to_satl(
         )
         return satl
 
-    except SaoeAdapterUnavailable:
+    except SaoeAdapterUnavailableError:
         raise
     except Exception as exc:
         raise SaoeAdapterError(
@@ -176,13 +178,13 @@ def from_satl(satl_envelope: Any) -> EnvelopeBase:
 
     Raises
     ------
-    SaoeAdapterUnavailable
+    SaoeAdapterUnavailableError
         If ``saoe-core`` is not installed.
     SaoeAdapterError
         If the payload cannot be parsed into a valid Corvusforge envelope.
     """
     if not _SAOE_SATL_AVAILABLE or _SATLEnvelope is None:
-        raise SaoeAdapterUnavailable(
+        raise SaoeAdapterUnavailableError(
             "Cannot convert from SATLEnvelope — saoe-core is not installed."
         )
 
@@ -222,7 +224,7 @@ def from_satl(satl_envelope: Any) -> EnvelopeBase:
         )
         return envelope
 
-    except (SaoeAdapterUnavailable, SaoeAdapterError):
+    except (SaoeAdapterUnavailableError, SaoeAdapterError):
         raise
     except Exception as exc:
         raise SaoeAdapterError(

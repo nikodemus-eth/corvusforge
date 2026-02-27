@@ -9,8 +9,8 @@ import pytest
 from corvusforge.core.envelope_bus import EnvelopeBus, EnvelopeValidationError
 from corvusforge.models.envelopes import (
     EnvelopeKind,
-    WorkOrderEnvelope,
     EventEnvelope,
+    WorkOrderEnvelope,
 )
 
 

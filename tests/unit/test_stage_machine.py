@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from corvusforge.core.prerequisite_graph import PrerequisiteNotMetError
-from corvusforge.core.stage_machine import StageMachine, InvalidTransitionError
+from corvusforge.core.stage_machine import InvalidTransitionError, StageMachine
 from corvusforge.models.stages import StageState
 
 

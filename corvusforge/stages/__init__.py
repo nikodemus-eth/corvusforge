@@ -14,8 +14,6 @@ Usage::
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from corvusforge.stages.base import BaseStage, StageExecutionError, StagePrerequisiteError
 from corvusforge.stages.s0_intake import IntakeStage
 from corvusforge.stages.s1_prerequisites import PrerequisitesSynthesisStage
@@ -23,10 +21,10 @@ from corvusforge.stages.s2_environment import EnvironmentReadinessStage
 from corvusforge.stages.s3_test_contract import TestContractingStage
 from corvusforge.stages.s4_code_plan import CodePlanStage
 from corvusforge.stages.s5_implementation import ImplementationStage
-from corvusforge.stages.s55_accessibility import AccessibilityGateStage
-from corvusforge.stages.s575_security import SecurityGateStage
 from corvusforge.stages.s6_verification import VerificationStage
 from corvusforge.stages.s7_release import ReleaseAttestationStage
+from corvusforge.stages.s55_accessibility import AccessibilityGateStage
+from corvusforge.stages.s575_security import SecurityGateStage
 
 # ---------------------------------------------------------------------------
 # Stage registry: stage_id -> stage class

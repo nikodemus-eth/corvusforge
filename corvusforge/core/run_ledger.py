@@ -18,9 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from corvusforge.core.hasher import compute_entry_hash, sha256_hex, canonical_json_bytes
+from corvusforge.core.hasher import canonical_json_bytes, compute_entry_hash, sha256_hex
 from corvusforge.models.ledger import LedgerEntry
-
 
 # ---------------------------------------------------------------------------
 # DDL

@@ -10,6 +10,7 @@ Requires a ``chat_id`` and optional ``bot_token`` in the sink configuration.
 from __future__ import annotations
 
 import logging
+
 from pydantic import BaseModel, ConfigDict
 
 from corvusforge.models.envelopes import EnvelopeBase

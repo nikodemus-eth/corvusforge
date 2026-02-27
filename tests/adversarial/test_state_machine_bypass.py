@@ -12,11 +12,10 @@ from __future__ import annotations
 
 import pytest
 
-from corvusforge.core.prerequisite_graph import PrerequisiteNotMetError
-from corvusforge.core.stage_machine import InvalidTransitionError, StageMachine
+from corvusforge.core.prerequisite_graph import PrerequisiteGraph, PrerequisiteNotMetError
 from corvusforge.core.run_ledger import RunLedger
-from corvusforge.core.prerequisite_graph import PrerequisiteGraph
-from corvusforge.models.stages import StageState, DEFAULT_STAGE_DEFINITIONS
+from corvusforge.core.stage_machine import InvalidTransitionError, StageMachine
+from corvusforge.models.stages import DEFAULT_STAGE_DEFINITIONS, StageState
 
 
 class TestPrerequisiteBypassAttempts:

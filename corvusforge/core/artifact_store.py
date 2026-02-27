@@ -6,7 +6,6 @@ No delete method — artifacts are immutable once stored.
 
 from __future__ import annotations
 
-import hashlib
 from pathlib import Path
 from typing import Any
 
@@ -123,7 +122,12 @@ class ContentAddressedStore:
     # Helpers
     # ------------------------------------------------------------------
 
-    def make_ref(self, content_address: str, name: str = "", artifact_type: str = "generic") -> ArtifactRef:
+    def make_ref(
+        self,
+        content_address: str,
+        name: str = "",
+        artifact_type: str = "generic",
+    ) -> ArtifactRef:
         """Create an ArtifactRef for a stored artifact."""
         digest = content_address.removeprefix("sha256:")
         path = self._artifact_path(digest)

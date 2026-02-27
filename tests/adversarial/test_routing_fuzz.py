@@ -10,13 +10,10 @@ These tests verify that:
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 
 from corvusforge.models.envelopes import EnvelopeBase, EnvelopeKind
 from corvusforge.routing.dispatcher import SinkDispatcher, SinkDispatchError
-
 
 # ---------------------------------------------------------------------------
 # Test sinks

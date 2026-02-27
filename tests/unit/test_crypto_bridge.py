@@ -11,8 +11,6 @@ TDD: RED phase — these tests define the desired behavior.
 
 from __future__ import annotations
 
-import pytest
-
 from corvusforge.bridge.crypto_bridge import (
     compute_trust_context,
     generate_keypair,
@@ -22,7 +20,6 @@ from corvusforge.bridge.crypto_bridge import (
     sign_data,
     verify_data,
 )
-
 
 # ---------------------------------------------------------------------------
 # Test: Key generation

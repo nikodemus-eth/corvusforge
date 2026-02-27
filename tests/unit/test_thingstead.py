@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
-from corvusforge.thingstead.fleet import ThingsteadFleet, FleetConfig
-from corvusforge.thingstead.memory import FleetMemory, MemoryShard
+from corvusforge.thingstead.fleet import FleetConfig, ThingsteadFleet
+from corvusforge.thingstead.memory import FleetMemory
 from corvusforge.thingstead.models import (
-    FleetSnapshot,
-    AgentAssignment,
     ExecutionReceipt,
     FleetEvent,
+    FleetSnapshot,
 )
 
 

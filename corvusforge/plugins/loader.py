@@ -290,7 +290,7 @@ class PluginLoader:
             # In a full deployment, the public key comes from the DLC manifest
             # or a ToolGate key registry.  Here we read it from the manifest
             # metadata or fall back to an empty string (verification will fail).
-            manifest = self._read_manifest(package_path)
+            self._read_manifest(package_path)
             public_key = ""  # Populated from ToolGate in production
             valid = verify_data(manifest_bytes, signature, public_key)
             if valid:

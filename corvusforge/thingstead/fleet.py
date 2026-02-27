@@ -24,10 +24,8 @@ from typing import TYPE_CHECKING, Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from corvusforge.core.hasher import (
-    canonical_json_bytes,
     compute_input_hash,
     compute_output_hash,
-    sha256_hex,
 )
 from corvusforge.thingstead.executors import (
     AgentExecutor,
@@ -35,7 +33,7 @@ from corvusforge.thingstead.executors import (
     DefaultToolGate,
     ToolGate,
 )
-from corvusforge.thingstead.memory import FleetMemory, MemoryShard
+from corvusforge.thingstead.memory import FleetMemory
 from corvusforge.thingstead.models import ExecutionReceipt, FleetEvent
 
 if TYPE_CHECKING:

@@ -7,7 +7,7 @@ Invariant 11: All agentic execution inside Thingstead fleets.
 Invariant 12: Persistent memory in .openclaw-data.
 """
 
-from corvusforge.thingstead.fleet import ThingsteadFleet, FleetConfig
+from corvusforge.thingstead.fleet import FleetConfig, ThingsteadFleet
 from corvusforge.thingstead.memory import FleetMemory, MemoryShard
 
 __all__ = ["ThingsteadFleet", "FleetConfig", "FleetMemory", "MemoryShard"]

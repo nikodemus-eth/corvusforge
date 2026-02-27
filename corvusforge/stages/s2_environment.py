@@ -13,10 +13,10 @@ The environment snapshot hash is stored on run_context for downstream use.
 
 from __future__ import annotations
 
+import logging
 import os
 import platform
 import shutil
-import logging
 from datetime import datetime, timezone
 from typing import Any, ClassVar
 

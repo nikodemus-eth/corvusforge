@@ -345,7 +345,7 @@ class Marketplace:
                 continue
             results.append(listing)
 
-        return sorted(results, key=lambda l: l.name)
+        return sorted(results, key=lambda entry: entry.name)
 
     def get_listing(self, name: str) -> MarketplaceListing | None:
         """Return the ``MarketplaceListing`` for *name*, or ``None``."""
@@ -359,7 +359,7 @@ class Marketplace:
         list[MarketplaceListing]
             Every listing in the catalog.
         """
-        return sorted(self._listings.values(), key=lambda l: l.name)
+        return sorted(self._listings.values(), key=lambda entry: entry.name)
 
     # -- Verification -------------------------------------------------------
 

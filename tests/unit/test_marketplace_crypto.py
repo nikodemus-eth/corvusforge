@@ -11,11 +11,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from corvusforge.bridge.crypto_bridge import generate_keypair, sign_data
-from corvusforge.core.hasher import canonical_json_bytes, content_address, sha256_hex
-from corvusforge.marketplace.marketplace import Marketplace, MarketplaceListing
+from corvusforge.core.hasher import canonical_json_bytes, sha256_hex
+from corvusforge.marketplace.marketplace import Marketplace
 from corvusforge.plugins.loader import PluginLoader
 
 

@@ -92,7 +92,9 @@ def _check_audit_log(saoe_core_path: Path | None) -> tuple[bool, str]:
 def _check_keys(saoe_core_path: Path | None) -> tuple[bool, str]:
     """Check if signing keys are available."""
     try:
-        from corvusforge.bridge.crypto_bridge import get_signing_key_fingerprint  # type: ignore[import-not-found]
+        from corvusforge.bridge.crypto_bridge import (
+            get_signing_key_fingerprint,  # type: ignore[import-not-found]
+        )
 
         fp = get_signing_key_fingerprint()
         if fp:

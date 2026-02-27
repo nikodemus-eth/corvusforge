@@ -116,7 +116,7 @@ def validate_trust_context_completeness(
         Warning messages for each missing or empty fingerprint.
     """
     # Map config field names to trust_context fingerprint key names
-    _FIELD_TO_FP = {
+    field_to_fp = {
         "plugin_trust_root": "plugin_trust_root_fp",
         "waiver_signing_key": "waiver_signing_key_fp",
         "anchor_key": "anchor_key_fp",
@@ -126,7 +126,7 @@ def validate_trust_context_completeness(
     warnings: list[str] = []
 
     for key_name in required:
-        fp_key = _FIELD_TO_FP.get(key_name, f"{key_name}_fp")
+        fp_key = field_to_fp.get(key_name, f"{key_name}_fp")
         fp_value = trust_context.get(fp_key, "")
         if not fp_value:
             warnings.append(

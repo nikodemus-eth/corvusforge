@@ -21,8 +21,8 @@ __description__ = (
     "Deterministic, Auditable, Contract-Driven Coding Pipeline with SAOE integration"
 )
 
+from corvusforge.cli.app import app as cli
 from corvusforge.core.orchestrator import Orchestrator
 from corvusforge.monitor.projection import MonitorProjection as BuildMonitor
-from corvusforge.cli.app import app as cli
 
 __all__ = ["Orchestrator", "BuildMonitor", "cli", "__version__"]

@@ -6,7 +6,6 @@ production guard invocation via typer.testing.CliRunner.
 
 from __future__ import annotations
 
-import pytest
 from typer.testing import CliRunner
 
 from corvusforge.cli.app import app

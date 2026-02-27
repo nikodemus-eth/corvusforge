@@ -18,7 +18,6 @@ Output is an ``AccessibilityAuditReport``-compatible dict.
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
 from typing import Any, ClassVar
 
 from corvusforge.core.hasher import content_address
@@ -40,7 +39,10 @@ _WCAG_CHECKS: list[dict[str, str]] = [
     {
         "check_id": "wcag-2.1-1.3.1",
         "category": "screen_reader",
-        "description": "Info and relationships conveyed through presentation are programmatically determinable.",
+        "description": (
+            "Info and relationships conveyed through presentation "
+            "are programmatically determinable."
+        ),
     },
     {
         "check_id": "wcag-2.1-1.4.1",
@@ -134,7 +136,7 @@ class AccessibilityGateStage(BaseStage):
         total_checks = len(_WCAG_CHECKS)
 
         for check_def in _WCAG_CHECKS:
-            check_id = check_def["check_id"]
+            check_def["check_id"]
             result = self._run_check(check_def, s5_result, overrides)
             if result is not None:
                 findings.append(result)

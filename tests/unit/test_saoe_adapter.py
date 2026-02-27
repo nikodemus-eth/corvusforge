@@ -8,18 +8,16 @@ TDD: RED phase — these tests define the local serialization contract.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
 from corvusforge.bridge.crypto_bridge import generate_keypair
 from corvusforge.bridge.saoe_adapter import (
     SaoeAdapterError,
-    SaoeAdapterUnavailable,
+    SaoeAdapterUnavailableError,
     from_local,
+    from_satl,
     to_local,
     to_satl,
-    from_satl,
 )
 from corvusforge.models.envelopes import EnvelopeKind, WorkOrderEnvelope
 
@@ -45,11 +43,11 @@ class TestSatlUnavailable:
 
     def test_to_satl_raises_when_saoe_unavailable(self):
         env = _make_envelope()
-        with pytest.raises(SaoeAdapterUnavailable):
+        with pytest.raises(SaoeAdapterUnavailableError):
             to_satl(env, signing_key="fake", template_ref="test/v1")
 
     def test_from_satl_raises_when_saoe_unavailable(self):
-        with pytest.raises(SaoeAdapterUnavailable):
+        with pytest.raises(SaoeAdapterUnavailableError):
             from_satl({"payload": {}})
 
 

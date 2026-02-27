@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from corvusforge.core.run_ledger import RunLedger, LedgerIntegrityError
+from corvusforge.core.run_ledger import LedgerIntegrityError, RunLedger
 from corvusforge.models.ledger import LedgerEntry
 
 
@@ -30,7 +30,7 @@ class TestLedgerTamperDetection:
             ledger.append(LedgerEntry(
                 run_id=run_id,
                 stage_id=f"s{i}",
-                state_transition=f"not_started->running",
+                state_transition="not_started->running",
             ))
         return ledger, run_id
 

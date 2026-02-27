@@ -6,17 +6,14 @@ and LocalFileSink write/read round-trip.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from corvusforge.models.envelopes import EnvelopeBase, EnvelopeKind, EventEnvelope
-from corvusforge.routing.dispatcher import SinkDispatchError, SinkDispatcher
+from corvusforge.routing.dispatcher import SinkDispatcher, SinkDispatchError
 from corvusforge.routing.sinks import BaseSink
 from corvusforge.routing.sinks.local_file import LocalFileSink
-
 
 # ---------------------------------------------------------------------------
 # Helpers

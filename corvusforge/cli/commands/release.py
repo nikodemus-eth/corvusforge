@@ -14,7 +14,6 @@ from rich.console import Console
 from rich.panel import Panel
 
 from corvusforge.core.orchestrator import Orchestrator
-from corvusforge.core.run_ledger import RunLedger
 from corvusforge.models.config import PipelineConfig
 from corvusforge.models.stages import StageState
 from corvusforge.monitor.projection import MonitorProjection
@@ -148,7 +147,7 @@ def release_cmd(
     console.print(
         Panel(
             "\n".join([
-                f"[bold green]Release complete![/bold green]",
+                "[bold green]Release complete![/bold green]",
                 "",
                 f"[bold]Run ID:[/bold] {run_id}",
                 f"[bold]Chain:[/bold]  {'valid' if final_snapshot.chain_valid else 'BROKEN'}",
