@@ -70,6 +70,13 @@ git push  # triggers full test + Docker build
 
 See [CHANGELOG.md](CHANGELOG.md) and [RELEASE_NOTES_v0.3.0.md](RELEASE_NOTES_v0.3.0.md) for details.
 
+## License
+
+Copyright (C) 2026 CORVUSFORGE, LLC
+
+Licensed under the **GNU Affero General Public License v3.0 only** (AGPL-3.0-only).
+See [LICENSE](LICENSE) for the full text.
+
 ---
 
 Status: v0.3.0 production-grade. Foundation locked. Ready for enterprise.

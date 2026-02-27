@@ -7,9 +7,9 @@ name = "corvusforge"
 version = "0.3.0"
 description = "Deterministic, Auditable, Contract-Driven Coding Pipeline"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "AGPL-3.0-only"}
 authors = [
-  {name = "nikodemus.crypto", email = "forge@corvusforge.dev"}
+  {name = "CORVUSFORGE, LLC", email = "corvus.nick.a@gmail.com"}
 ]
 keywords = [
   "pipeline", "forge", "deterministic", "audit",
@@ -18,7 +18,7 @@ keywords = [
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
+  "License :: OSI Approved :: GNU Affero General Public License v3",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",

@@ -47,7 +47,7 @@ class DLCManifest(BaseModel):
     >>> manifest = DLCManifest(
     ...     name="corvusforge-s3-sink",
     ...     version="1.0.0",
-    ...     author="nikodemus.crypto",
+    ...     author="CORVUSFORGE, LLC",
     ...     description="S3 artifact routing sink",
     ...     entry_point="corvusforge_s3.sink:S3Sink",
     ...     kind=PluginKind.SINK,

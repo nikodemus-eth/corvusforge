@@ -65,7 +65,7 @@ class PluginEntry(BaseModel):
     ...     name="corvusforge-slack-sink",
     ...     version="1.0.0",
     ...     kind=PluginKind.SINK,
-    ...     author="nikodemus.crypto",
+    ...     author="CORVUSFORGE, LLC",
     ...     description="Routes envelopes to Slack channels",
     ...     entry_point="corvusforge_slack.sink:SlackSink",
     ... )

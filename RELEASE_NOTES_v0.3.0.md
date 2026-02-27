@@ -21,4 +21,4 @@
 
 **Repository**: Private by default (change to public later).
 
-Built by nikodemus.crypto — Corvusforge is now production-ready.
+Built by CORVUSFORGE, LLC — Corvusforge is now production-ready.

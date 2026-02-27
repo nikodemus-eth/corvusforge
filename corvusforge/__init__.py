@@ -11,7 +11,7 @@ v0.3.0 — Production-grade release with:
 """
 
 __version__ = "0.3.0"
-__author__ = "nikodemus.crypto"
+__author__ = "CORVUSFORGE, LLC"
 __description__ = (
     "Deterministic, Auditable, Contract-Driven Coding Pipeline with SAOE integration"
 )

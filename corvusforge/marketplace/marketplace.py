@@ -54,7 +54,7 @@ class MarketplaceListing(BaseModel):
     >>> listing = MarketplaceListing(
     ...     name="corvusforge-slack-sink",
     ...     version="1.0.0",
-    ...     author="nikodemus.crypto",
+    ...     author="CORVUSFORGE, LLC",
     ...     description="Routes envelopes to Slack channels",
     ...     kind=PluginKind.SINK,
     ...     content_address="sha256:abc123",
