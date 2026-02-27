@@ -59,7 +59,11 @@ def plugins_cmd(
     try:
         from corvusforge.plugins.registry import PluginRegistry, PluginKind
 
-        registry = PluginRegistry()
+        from corvusforge.config import config as _cfg
+
+        registry = PluginRegistry(
+            plugin_trust_root_key=_cfg.plugin_trust_root,
+        )
         kind_filter = PluginKind(kind) if kind else None
         plugins = registry.list_plugins(kind=kind_filter, enabled_only=False)
 
@@ -82,6 +86,18 @@ def plugins_cmd(
         console.print(table)
     except Exception as e:
         console.print(f"[red]Plugin registry error:[/red] {e}")
+
+
+@app.callback(invoke_without_command=True)
+def _cli_startup(ctx: typer.Context) -> None:
+    """Run production guard before any CLI command."""
+    if ctx.invoked_subcommand is None:
+        # --help or no command: Typer handles this, skip guard
+        return
+    from corvusforge.config import config as _cfg
+    from corvusforge.core.production_guard import enforce_production_constraints
+
+    enforce_production_constraints(_cfg)
 
 
 def main() -> None:

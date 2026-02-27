@@ -302,3 +302,122 @@ class TestMarketplaceFailClosed:
         listing = mp.get_listing(name)
         assert listing is not None
         assert listing.verified is False
+
+
+# ===================================================================
+# Structural: all construction sites must pass trust root keys
+# ===================================================================
+
+class TestAllConstructionSitesWired:
+    """Every PluginRegistry() and WaiverManager() construction in the
+    codebase must pass the appropriate trust root key parameter.
+
+    Uses ``ast.parse`` for robust detection that survives formatting changes,
+    multi-line calls, nested parentheses, and string literals.
+    """
+
+    # Files that construct trust-sensitive objects (production code only).
+    _AUDITED_FILES: list[str] = [
+        "dashboard/app.py",
+        "cli/app.py",
+        "core/orchestrator.py",
+    ]
+
+    @staticmethod
+    def _find_calls_missing_kwarg(
+        rel_path: str,
+        func_name: str,
+        required_kwarg: str,
+    ) -> list[int]:
+        """Return line numbers where ``func_name(...)`` is called without
+        ``required_kwarg`` in its keyword arguments.
+
+        Parses the source with ``ast`` so multi-line calls, nested parens,
+        and formatting changes are handled correctly.
+        """
+        import ast
+        import corvusforge
+
+        package_root = Path(corvusforge.__file__).parent
+        full_path = package_root / rel_path
+        if not full_path.exists():
+            return []
+
+        source = full_path.read_text()
+        tree = ast.parse(source, filename=str(full_path))
+        hits: list[int] = []
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            # Match Name (direct call) or Attribute (method call)
+            callee = node.func
+            name: str | None = None
+            if isinstance(callee, ast.Name):
+                name = callee.id
+            elif isinstance(callee, ast.Attribute):
+                name = callee.attr
+            if name != func_name:
+                continue
+            # Check keywords for the required kwarg
+            kwarg_names = {kw.arg for kw in node.keywords if kw.arg is not None}
+            if required_kwarg not in kwarg_names:
+                hits.append(node.lineno)
+        return hits
+
+    def test_no_bare_plugin_registry_construction(self):
+        """Every PluginRegistry() call must include plugin_trust_root_key=."""
+        for rel_path in self._AUDITED_FILES:
+            hits = self._find_calls_missing_kwarg(
+                rel_path, "PluginRegistry", "plugin_trust_root_key"
+            )
+            assert hits == [], (
+                f"{rel_path} has PluginRegistry() without "
+                f"plugin_trust_root_key= on line(s) {hits}"
+            )
+
+    def test_no_bare_waiver_manager_construction(self):
+        """Every WaiverManager() call must include waiver_verification_key=."""
+        for rel_path in [
+            "dashboard/app.py",
+            "core/orchestrator.py",
+        ]:
+            hits = self._find_calls_missing_kwarg(
+                rel_path, "WaiverManager", "waiver_verification_key"
+            )
+            assert hits == [], (
+                f"{rel_path} has WaiverManager() without "
+                f"waiver_verification_key= on line(s) {hits}"
+            )
+
+
+# ===================================================================
+# Structural: entrypoints must call enforce_production_constraints
+# ===================================================================
+
+class TestEntrypointsRunProductionGuard:
+    """Every user-facing entrypoint (CLI, dashboard) must call
+    enforce_production_constraints() to fail fast in production."""
+
+    @staticmethod
+    def _source_text(rel_path: str) -> str:
+        import corvusforge
+        package_root = Path(corvusforge.__file__).parent
+        full = package_root / rel_path
+        return full.read_text() if full.exists() else ""
+
+    def test_cli_entrypoint_calls_production_guard(self):
+        """CLI app must call enforce_production_constraints."""
+        src = self._source_text("cli/app.py")
+        assert "enforce_production_constraints" in src, (
+            "cli/app.py does not call enforce_production_constraints — "
+            "production mode will not fail fast at CLI startup"
+        )
+
+    def test_dashboard_entrypoint_calls_production_guard(self):
+        """Dashboard must call enforce_production_constraints."""
+        src = self._source_text("dashboard/app.py")
+        assert "enforce_production_constraints" in src, (
+            "dashboard/app.py does not call enforce_production_constraints — "
+            "production mode will not fail fast at dashboard startup"
+        )

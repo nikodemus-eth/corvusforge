@@ -40,6 +40,12 @@ def create_dashboard(
     data_dir:
         Path to .openclaw-data for fleet memory. Defaults to .openclaw-data.
     """
+    # Fail fast: production guard must pass before any UI renders
+    from corvusforge.config import config as _cfg
+    from corvusforge.core.production_guard import enforce_production_constraints
+
+    enforce_production_constraints(_cfg)
+
     if not HAS_STREAMLIT:
         print("Streamlit is required for the dashboard.")
         print("Install with: pip install corvusforge[dashboard]")
@@ -445,7 +451,11 @@ def _render_plugin_manager() -> None:
         return
 
     try:
-        registry = PluginRegistry()
+        from corvusforge.config import config as _cfg
+
+        registry = PluginRegistry(
+            plugin_trust_root_key=_cfg.plugin_trust_root,
+        )
         plugins = registry.list_plugins(enabled_only=False)
     except Exception as exc:
         st.info(f"Plugin registry not initialized: {exc}")
@@ -657,7 +667,12 @@ def _render_active_waivers() -> None:
         store = ContentAddressedStore(
             base_path=Path(".corvusforge/artifacts")
         )
-        wm = WaiverManager(store)
+        from corvusforge.config import config as _cfg
+
+        wm = WaiverManager(
+            store,
+            waiver_verification_key=_cfg.waiver_signing_key,
+        )
         waivers = wm.get_all_active_waivers()
 
         if waivers:
