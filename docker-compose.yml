@@ -1,0 +1,25 @@
+# Corvusforge v0.3.0 — Docker Compose for local development and production
+# Usage: docker-compose up --build
+
+services:
+  corvusforge:
+    build: .
+    ports:
+      - "8501:8501"  # Streamlit dashboard
+    volumes:
+      - openclaw-data:/app/.openclaw-data
+      - corvusforge-data:/app/.corvusforge
+    environment:
+      - CORVUSFORGE_ENVIRONMENT=production
+      - CORVUSFORGE_LOG_LEVEL=INFO
+      - CORVUSFORGE_DOCKER_MODE=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "corvusforge", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  openclaw-data:
+  corvusforge-data:
