@@ -14,6 +14,7 @@ from pathlib import Path
 
 from corvusforge.core.hasher import canonical_json_bytes
 from corvusforge.models.envelopes import EnvelopeBase
+from corvusforge.routing.sinks._formatting import extract_stage_id
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class LocalFileSink:
         the file is written under a ``_general`` directory.
         """
         run_id = envelope.run_id
-        stage_id = getattr(envelope, "stage_id", None) or "_general"
+        stage_id = extract_stage_id(envelope, default="_general")
         envelope_id = envelope.envelope_id
 
         target_dir = self._base / run_id / stage_id

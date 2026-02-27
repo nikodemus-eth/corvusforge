@@ -15,6 +15,11 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 from corvusforge.models.envelopes import EnvelopeBase
+from corvusforge.routing.sinks._formatting import (
+    extract_detail_lines,
+    extract_stage_id,
+    format_kind_label,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -102,15 +107,15 @@ class EmailSink:
     @staticmethod
     def _format_subject(envelope: EnvelopeBase) -> str:
         """Build the email subject line."""
-        kind = envelope.envelope_kind.value.replace("_", " ").title()
-        stage_id = getattr(envelope, "stage_id", None) or "general"
+        kind = format_kind_label(envelope)
+        stage_id = extract_stage_id(envelope, default="general")
         return f"[Corvusforge] {kind} — {envelope.run_id} / {stage_id}"
 
     @staticmethod
     def _format_body_text(envelope: EnvelopeBase) -> str:
         """Build the plain-text email body."""
-        kind = envelope.envelope_kind.value.replace("_", " ").title()
-        stage_id = getattr(envelope, "stage_id", None) or "N/A"
+        kind = format_kind_label(envelope)
+        stage_id = extract_stage_id(envelope)
         lines: list[str] = [
             f"Corvusforge {kind}",
             "=" * 40,
@@ -122,14 +127,13 @@ class EmailSink:
             "",
         ]
 
-        if hasattr(envelope, "event_type"):
-            lines.append(f"Event Type: {envelope.event_type}")
-        if hasattr(envelope, "error_message"):
-            lines.append(f"Error: {envelope.error_message}")
-        if hasattr(envelope, "question"):
-            lines.append(f"Clarification: {envelope.question}")
-        if hasattr(envelope, "artifact_ref"):
-            lines.append(f"Artifact: {envelope.artifact_ref}")
+        # Kind-specific detail lines (event_type, error_message, etc.)
+        detail_lines = extract_detail_lines(envelope)
+        # Preserve the "Clarification:" label for email (differs from generic)
+        for dl in detail_lines:
+            if dl.startswith("Question:"):
+                dl = dl.replace("Question:", "Clarification:", 1)
+            lines.append(dl)
 
         lines.append("")
         lines.append("-- Corvusforge Pipeline Notification")
@@ -138,8 +142,8 @@ class EmailSink:
     @staticmethod
     def _format_body_html(envelope: EnvelopeBase) -> str:
         """Build the HTML email body."""
-        kind = envelope.envelope_kind.value.replace("_", " ").title()
-        stage_id = getattr(envelope, "stage_id", None) or "N/A"
+        kind = format_kind_label(envelope)
+        stage_id = extract_stage_id(envelope)
         rows: list[str] = [
             f"<tr><td><b>Run ID</b></td><td><code>{envelope.run_id}</code></td></tr>",
             f"<tr><td><b>Stage</b></td><td><code>{stage_id}</code></td></tr>",

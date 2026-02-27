@@ -10,11 +10,13 @@ Requires a ``chat_id`` and optional ``bot_token`` in the sink configuration.
 from __future__ import annotations
 
 import logging
-from typing import Any
-
 from pydantic import BaseModel, ConfigDict
 
 from corvusforge.models.envelopes import EnvelopeBase
+from corvusforge.routing.sinks._formatting import (
+    extract_stage_id,
+    format_kind_label,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +87,8 @@ class TelegramSink:
     @staticmethod
     def _format_message(envelope: EnvelopeBase) -> str:
         """Format an envelope into a human-readable Telegram message."""
-        kind = envelope.envelope_kind.value.replace("_", " ").title()
-        stage_id = getattr(envelope, "stage_id", None) or "N/A"
+        kind = format_kind_label(envelope)
+        stage_id = extract_stage_id(envelope)
         details: list[str] = [
             f"<b>Corvusforge {kind}</b>",
             f"Run: <code>{envelope.run_id}</code>",
