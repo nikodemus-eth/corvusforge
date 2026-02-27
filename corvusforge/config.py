@@ -70,6 +70,11 @@ class ProdConfig(BaseSettings):
     waiver_signing_key: str = ""   # public key for waiver signature verification
     anchor_key: str = ""           # public key for anchor signing (future)
 
+    # Trust context enforcement — field names that must have non-empty values.
+    # Empty list means use the production defaults (plugin_trust_root, waiver_signing_key).
+    # Set via CORVUSFORGE_TRUST_CONTEXT_REQUIRED_KEYS as JSON array.
+    trust_context_required_keys: list[str] = []
+
     # Observability
     enable_metrics: bool = False
     metrics_port: int = 9090

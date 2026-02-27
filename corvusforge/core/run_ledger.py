@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS run_ledger (
     ruleset_versions_json TEXT NOT NULL DEFAULT '{}',
     waiver_refs_json      TEXT NOT NULL DEFAULT '[]',
     trust_context_json    TEXT NOT NULL DEFAULT '{}',
+    trust_context_version TEXT NOT NULL DEFAULT '1',
     payload_hash          TEXT NOT NULL DEFAULT '',
     previous_entry_hash   TEXT NOT NULL DEFAULT '',
     entry_hash            TEXT NOT NULL UNIQUE
@@ -132,8 +133,9 @@ class RunLedger:
                      input_hash, output_hash, artifact_refs_json,
                      pipeline_version, schema_version, toolchain_version,
                      ruleset_versions_json, waiver_refs_json, trust_context_json,
-                     payload_hash, previous_entry_hash, entry_hash)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     trust_context_version, payload_hash,
+                     previous_entry_hash, entry_hash)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     entry.entry_id,
@@ -152,6 +154,7 @@ class RunLedger:
                     json.dumps(entry.ruleset_versions),
                     json.dumps(entry.waiver_references),
                     json.dumps(entry.trust_context),
+                    entry.trust_context_version,
                     entry.payload_hash,
                     entry.previous_entry_hash,
                     entry.entry_hash,
@@ -360,6 +363,7 @@ class RunLedger:
             ruleset_versions_json,
             waiver_refs_json,
             trust_context_json,
+            trust_context_version,
             payload_hash,
             previous_entry_hash,
             entry_hash,
@@ -379,6 +383,7 @@ class RunLedger:
             ruleset_versions=json.loads(ruleset_versions_json),
             waiver_references=json.loads(waiver_refs_json),
             trust_context=json.loads(trust_context_json),
+            trust_context_version=trust_context_version,
             payload_hash=payload_hash,
             previous_entry_hash=previous_entry_hash,
             entry_hash=entry_hash,

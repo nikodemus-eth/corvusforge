@@ -260,3 +260,80 @@ class TestTrustRootRotation:
             assert "plugin_trust_root_fp" in entry.trust_context
             # Empty is fine — but the field must exist
             assert entry.trust_context["plugin_trust_root_fp"] == ""
+
+
+# ---------------------------------------------------------------------------
+# Test: Trust context schema version
+# ---------------------------------------------------------------------------
+
+
+class TestTrustContextVersion:
+    """trust_context_version must be recorded and survive round-trip."""
+
+    def test_default_version_is_one(self):
+        """New LedgerEntry defaults to trust_context_version='1'."""
+        entry = LedgerEntry(
+            run_id="version-test",
+            stage_id="s0_intake",
+            state_transition="not_started->running",
+        )
+        assert entry.trust_context_version == "1"
+
+    def test_version_survives_sqlite_round_trip(
+        self, pipeline_config: PipelineConfig, tmp_path: Path
+    ):
+        """trust_context_version must persist through write-then-read."""
+        ledger = RunLedger(pipeline_config.ledger_db_path)
+        entry = LedgerEntry(
+            run_id="version-rt",
+            stage_id="s0_intake",
+            state_transition="not_started->running",
+            trust_context_version="1",
+        )
+        sealed = ledger.append(entry)
+        retrieved = ledger.get_run_entries("version-rt")
+
+        assert len(retrieved) == 1
+        assert retrieved[0].trust_context_version == "1"
+        assert retrieved[0].trust_context_version == sealed.trust_context_version
+
+    def test_version_is_part_of_entry_hash(
+        self, pipeline_config: PipelineConfig, tmp_path: Path
+    ):
+        """Changing trust_context_version should produce a different entry_hash."""
+        import json
+        import sqlite3
+
+        ledger = RunLedger(pipeline_config.ledger_db_path)
+
+        entry = LedgerEntry(
+            run_id="version-hash",
+            stage_id="s0_intake",
+            state_transition="not_started->running",
+            trust_context_version="1",
+        )
+        ledger.append(entry)
+
+        # Tamper: change version in SQLite
+        db_path = ledger._db_path
+        conn = sqlite3.connect(str(db_path))
+        conn.execute(
+            "UPDATE run_ledger SET trust_context_version = '99' "
+            "WHERE run_id = 'version-hash'"
+        )
+        conn.commit()
+        conn.close()
+
+        # Chain must now be broken
+        with pytest.raises(LedgerIntegrityError, match="Tampered"):
+            ledger.verify_chain("version-hash")
+
+    def test_orchestrator_entries_have_version(
+        self, pipeline_config: PipelineConfig, tmp_path: Path
+    ):
+        """Orchestrator-generated entries must have trust_context_version."""
+        orch = Orchestrator(config=pipeline_config)
+        orch.start_run()
+
+        for entry in orch.get_run_entries():
+            assert entry.trust_context_version == "1"

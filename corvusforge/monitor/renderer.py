@@ -102,6 +102,13 @@ class MonitorRenderer:
         )
         summary_parts.append(f"[bold]Chain:[/bold] {chain_status}")
 
+        # Trust context health indicator
+        if snapshot.trust_context_healthy:
+            trust_status = "[green]healthy[/green]"
+        else:
+            trust_status = "[bold red]INCOMPLETE[/bold red]"
+        summary_parts.append(f"[bold]Trust:[/bold] {trust_status}")
+
         summary = "  |  ".join(summary_parts)
 
         # Compose into a Panel

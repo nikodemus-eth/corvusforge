@@ -112,11 +112,24 @@ Read every core module against the 16 invariants. Identified five risk areas, ca
 **Fix:** ADR-0007 explicitly classifies CI as inside the TCB for plugin signing and anchor export, but outside the TCB for waiver signing. Key separation requirements documented. Trust model and runbook updated with CI-specific guidance and anchor storage domain separation.
 **Lesson:** Implicit trust boundaries are non-boundaries. If a component can sign artifacts and you haven't said "this component is trusted to sign," you don't know what compromise means.
 
+### Entry 11 — Trust Context Required Keys + Schema Version
+**Date:** 2026-02-26
+**Problem:** Two gaps remained: (1) Production could start without trust root keys configured — the guard only checked `debug`, not trust readiness. (2) `trust_context` was a freeform dict with no schema version, making future evolution ambiguous for forensic tools.
+**Fix:**
+- Added `trust_context_required_keys` to `ProdConfig` (defaults to empty; production falls back to `PRODUCTION_REQUIRED_TRUST_KEYS` constant: `plugin_trust_root`, `waiver_signing_key`).
+- Production guard now validates that all required trust keys have non-empty values. Fails hard with descriptive error listing each missing key.
+- Added `validate_trust_context_completeness()` runtime check for monitor health.
+- Added `trust_context_version: str = "1"` to `LedgerEntry` and SQLite schema. Sealed into entry hash — tamper-evident.
+- `MonitorSnapshot` now includes `trust_context_healthy`, `trust_context_warnings`, and `trust_context_version`. Renderer shows `Trust: healthy` (green) or `Trust: INCOMPLETE` (bold red) in the summary line.
+**Files changed:** `config.py`, `models/ledger.py`, `core/run_ledger.py`, `core/production_guard.py`, `monitor/projection.py`, `monitor/renderer.py`.
+**New tests:** 24 tests across 4 new test classes: `TestTrustContextRequiredKeys` (8), `TestValidateTrustContextCompleteness` (5), `TestTrustContextVersion` (4), `TestMonitorTrustContextHealth` (5) + `TestMonitorSnapshotBasic` (2).
+**Lesson:** Environment profiles with enforced key requirements turn "did you remember to configure trust keys?" from a human question into a machine-checked invariant.
+
 ---
 
 ## Summary
 
-**Final state:** 214 tests passing (135 original + 69 adversarial + 10 trust rotation). All hardening items implemented.
-**Production code changes:** 9 files modified across two rounds. Zero new features. Zero API breaks. Backward compatible.
+**Final state:** 238 tests passing (135 original + 69 adversarial + 10 trust rotation + 24 trust enforcement/monitor). All hardening items implemented.
+**Production code changes:** 11 files modified across three rounds. Zero new features. Zero API breaks. Backward compatible.
 **Documentation:** 7 ADRs, threat model, operational runbook, hardening log.
-**Tests added:** 9 test files in `tests/adversarial/`. 1 real bug found and fixed during writing.
+**Tests added:** 10 test files in `tests/adversarial/` + `tests/unit/`. 1 real bug found and fixed during writing.

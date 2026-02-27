@@ -12,6 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from corvusforge.core.production_guard import validate_trust_context_completeness
 from corvusforge.core.run_ledger import RunLedger
 from corvusforge.models.ledger import LedgerEntry
 from corvusforge.models.stages import (
@@ -55,6 +56,9 @@ class MonitorSnapshot(BaseModel):
     active_waivers: list[str] = []
     artifact_count: int = 0
     chain_valid: bool = True
+    trust_context_healthy: bool = True
+    trust_context_warnings: list[str] = []
+    trust_context_version: str = "1"
     last_updated: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -108,6 +112,8 @@ class MonitorProjection:
         self,
         ledger: RunLedger,
         stage_definitions: list[StageDefinition] | None = None,
+        *,
+        trust_context_required_keys: list[str] | None = None,
     ) -> None:
         self._ledger = ledger
         self._stage_defs = {
@@ -122,6 +128,7 @@ class MonitorProjection:
                 key=lambda sd: sd.ordinal,
             )
         ]
+        self._trust_required_keys = trust_context_required_keys
 
     def snapshot(self, run_id: str) -> MonitorSnapshot:
         """Produce a point-in-time snapshot of the pipeline run.
@@ -180,6 +187,13 @@ class MonitorProjection:
         # Verify chain validity (lightweight — just check structure)
         chain_valid = self._check_chain_valid(run_id)
 
+        # Trust context health — check latest entry against required keys
+        trust_warnings = self._check_trust_context_health(entries)
+        trust_healthy = len(trust_warnings) == 0
+
+        # Trust context version from latest entry
+        trust_ctx_version = entries[-1].trust_context_version if entries else "1"
+
         # Last updated timestamp
         last_updated = entries[-1].timestamp_utc if entries else datetime.now(timezone.utc)
 
@@ -191,6 +205,9 @@ class MonitorProjection:
             active_waivers=active_waivers,
             artifact_count=artifact_count,
             chain_valid=chain_valid,
+            trust_context_healthy=trust_healthy,
+            trust_context_warnings=trust_warnings,
+            trust_context_version=trust_ctx_version,
             last_updated=last_updated,
         )
 
@@ -274,6 +291,22 @@ class MonitorProjection:
         for entry in entries:
             refs.update(entry.artifact_references)
         return len(refs)
+
+    def _check_trust_context_health(
+        self, entries: list[LedgerEntry]
+    ) -> list[str]:
+        """Check whether the latest entry's trust context has all required fingerprints.
+
+        Returns warning strings — empty means healthy.
+        """
+        if not entries:
+            return []
+
+        latest = entries[-1]
+        return validate_trust_context_completeness(
+            latest.trust_context,
+            required_keys=self._trust_required_keys,
+        )
 
     def _check_chain_valid(self, run_id: str) -> bool:
         """Check hash chain integrity without raising."""
