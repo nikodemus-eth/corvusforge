@@ -187,8 +187,15 @@ class TestTrustRootRotation:
 
         # Now read all entries: the boundary should be clear
         all_entries = ledger.get_run_entries("rotation-run")
-        phase1_entries = [e for e in all_entries if e.trust_context.get("plugin_trust_root_fp") == fp_alpha]
-        phase2_entries = [e for e in all_entries if e.trust_context.get("plugin_trust_root_fp") == fp_beta]
+        fp_key = "plugin_trust_root_fp"
+        phase1_entries = [
+            e for e in all_entries
+            if e.trust_context.get(fp_key) == fp_alpha
+        ]
+        phase2_entries = [
+            e for e in all_entries
+            if e.trust_context.get(fp_key) == fp_beta
+        ]
 
         assert len(phase1_entries) >= 2  # s0 RUNNING + PASSED
         assert len(phase2_entries) >= 1  # s1 RUNNING
@@ -232,7 +239,10 @@ class TestTrustRootRotation:
         })
         conn.execute(
             "UPDATE run_ledger SET trust_context_json = ? "
-            "WHERE id = (SELECT id FROM run_ledger WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 1)",
+            "WHERE id = ("
+            "SELECT id FROM run_ledger "
+            "WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 1"
+            ")",
             (tampered_ctx, "tamper-run"),
         )
         conn.commit()

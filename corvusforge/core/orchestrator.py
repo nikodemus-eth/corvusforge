@@ -81,9 +81,9 @@ class Orchestrator:
 
         # Trust context — key fingerprints recorded in every ledger entry
         self._trust_ctx = compute_trust_context(
-            plugin_trust_root=getattr(self._prod_config, "plugin_trust_root", ""),
-            waiver_signing_key=getattr(self._prod_config, "waiver_signing_key", ""),
-            anchor_key=getattr(self._prod_config, "anchor_key", ""),
+            plugin_trust_root=self._prod_config.plugin_trust_root,
+            waiver_signing_key=self._prod_config.waiver_signing_key,
+            anchor_key=self._prod_config.anchor_key,
         )
 
         # Stage handler registry

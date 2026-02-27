@@ -51,11 +51,13 @@ _AgentShim: Any = None
 _ToolGate: Any = None
 
 try:
-    from saoe_core.agents import AgentShim as _SaoeAgentShim  # type: ignore[import-untyped]
-    from saoe_core.agents import ToolGate as _SaoeToolGate  # type: ignore[import-untyped]
+    from saoe_core.agents import (  # type: ignore[import-untyped]
+        AgentShim as _AgentShim,
+    )
+    from saoe_core.agents import (
+        ToolGate as _ToolGate,  # noqa: F401 — future hook
+    )
 
-    _AgentShim = _SaoeAgentShim
-    _ToolGate = _SaoeToolGate
     _SAOE_AGENTS_AVAILABLE = True
     logger.debug("saoe_core.agents loaded — SAOE agent integration enabled.")
 except ImportError:

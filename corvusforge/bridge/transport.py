@@ -42,9 +42,8 @@ _SAOE_SHIM_AVAILABLE: bool = False
 _AgentShim: Any = None
 
 try:
-    from saoe_openclaw.shim import AgentShim as _SaoeAgentShim  # type: ignore[import-untyped]
+    from saoe_openclaw.shim import AgentShim as _AgentShim  # type: ignore[import-untyped]
 
-    _AgentShim = _SaoeAgentShim
     _SAOE_SHIM_AVAILABLE = True
     logger.debug("saoe_openclaw.shim.AgentShim loaded — using SAOE transport.")
 except ImportError:

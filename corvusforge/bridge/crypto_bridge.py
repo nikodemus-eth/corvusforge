@@ -37,9 +37,8 @@ _SAOE_CRYPTO_AVAILABLE: bool = False
 _Keyring: Any = None
 
 try:
-    from saoe_core.crypto.keyring import Keyring as _SaoeKeyring  # type: ignore[import-untyped]
+    from saoe_core.crypto.keyring import Keyring as _Keyring  # type: ignore[import-untyped]
 
-    _Keyring = _SaoeKeyring
     _SAOE_CRYPTO_AVAILABLE = True
     logger.debug("saoe_core.crypto.keyring loaded — using SAOE crypto backend.")
 except ImportError:
@@ -53,8 +52,7 @@ _NATIVE_CRYPTO_AVAILABLE: bool = False
 
 if not _SAOE_CRYPTO_AVAILABLE:
     try:
-        import nacl.signing  # noqa: F401 — used in functions below
-        from nacl.exceptions import BadSignatureError as _BadSigError  # noqa: F401
+        import nacl.signing  # noqa: F401 — availability check; used via local imports
 
         _NATIVE_CRYPTO_AVAILABLE = True
         logger.info(

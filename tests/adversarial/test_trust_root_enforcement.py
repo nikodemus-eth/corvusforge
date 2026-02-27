@@ -126,7 +126,11 @@ class TestWaiverTrustRootEnforcement:
         waiver = _make_waiver(signature="valid-sig-hex")
 
         # Mock verify_data to return True when called with the config key
-        with patch("corvusforge.core.waiver_manager.WaiverManager._verify_waiver_signature") as mock_verify:
+        verify_path = (
+            "corvusforge.core.waiver_manager"
+            ".WaiverManager._verify_waiver_signature"
+        )
+        with patch(verify_path) as mock_verify:
             mock_verify.return_value = True
             addr = mgr.register_waiver(waiver)
             assert addr.startswith("sha256:")
@@ -293,8 +297,9 @@ class TestMarketplaceFailClosed:
         """When verify_data returns False, listing must NOT be marked verified."""
         mp, name = self._make_published_dlc(tmp_path)
 
-        with patch("corvusforge.bridge.crypto_bridge.is_saoe_crypto_available", return_value=True), \
-             patch("corvusforge.bridge.crypto_bridge.verify_data", return_value=False):
+        crypto = "corvusforge.bridge.crypto_bridge"
+        with patch(f"{crypto}.is_saoe_crypto_available", return_value=True), \
+             patch(f"{crypto}.verify_data", return_value=False):
             result = mp.verify_listing(name)
             assert result is False
 

@@ -207,8 +207,14 @@ class TestDecisionRegistry:
     def test_summarize_run(self):
         """summarize_run should produce correct aggregate counts."""
         reg = DecisionRegistry()
-        reg.record(self._make_record(run_id="run-s", outcome=HookOutcome.USER_DECIDED, priority=HookPriority.CRITICAL))
-        reg.record(self._make_record(run_id="run-s", outcome=HookOutcome.DEFAULT_USED, priority=HookPriority.ADVISORY))
+        reg.record(self._make_record(
+            run_id="run-s", outcome=HookOutcome.USER_DECIDED,
+            priority=HookPriority.CRITICAL,
+        ))
+        reg.record(self._make_record(
+            run_id="run-s", outcome=HookOutcome.DEFAULT_USED,
+            priority=HookPriority.ADVISORY,
+        ))
         reg.record(self._make_record(run_id="run-s", outcome=HookOutcome.SKIPPED))
         reg.record(self._make_record(run_id="other", outcome=HookOutcome.FAILED))
 

@@ -42,7 +42,10 @@ class TestLedgerTamperDetection:
         conn = sqlite3.connect(str(db_path))
         conn.execute(
             "UPDATE run_ledger SET entry_hash = 'TAMPERED' "
-            "WHERE id = (SELECT id FROM run_ledger WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 2)",
+            "WHERE id = ("
+            "SELECT id FROM run_ledger "
+            "WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 2"
+            ")",
             (run_id,),
         )
         conn.commit()
@@ -59,7 +62,10 @@ class TestLedgerTamperDetection:
         # Tamper the state_transition of entry 2
         conn.execute(
             "UPDATE run_ledger SET state_transition = 'injected->malicious' "
-            "WHERE run_id = ? AND id = (SELECT id FROM run_ledger WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 1)",
+            "WHERE run_id = ? AND id = ("
+            "SELECT id FROM run_ledger "
+            "WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 1"
+            ")",
             (run_id, run_id),
         )
         conn.commit()
@@ -93,7 +99,10 @@ class TestLedgerTamperDetection:
         # Break the chain by corrupting the 3rd entry's previous_entry_hash
         conn.execute(
             "UPDATE run_ledger SET previous_entry_hash = 'WRONG_LINK' "
-            "WHERE id = (SELECT id FROM run_ledger WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 2)",
+            "WHERE id = ("
+            "SELECT id FROM run_ledger "
+            "WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 2"
+            ")",
             (run_id,),
         )
         conn.commit()
@@ -138,7 +147,10 @@ class TestExternalAnchoring:
         conn = sqlite3.connect(str(tmp_path / "ledger.db"))
         conn.execute(
             "UPDATE run_ledger SET state_transition = 'HACKED' "
-            "WHERE run_id = ? AND id = (SELECT id FROM run_ledger WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 1)",
+            "WHERE run_id = ? AND id = ("
+            "SELECT id FROM run_ledger "
+            "WHERE run_id = ? ORDER BY id ASC LIMIT 1 OFFSET 1"
+            ")",
             (run_id, run_id),
         )
         conn.commit()

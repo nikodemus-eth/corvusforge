@@ -145,32 +145,51 @@ class StageMachine:
 
         # Cascade effects
         if target_state == StageState.FAILED:
-            blocked = self._graph.cascade_block(stage_id, self._states[run_id])
-            # Record cascade blocks in the ledger
-            for blocked_id in blocked:
-                block_entry = LedgerEntry(
-                    run_id=run_id,
-                    stage_id=blocked_id,
-                    state_transition=f"{StageState.NOT_STARTED.value}->{StageState.BLOCKED.value}",
-                    input_hash="",
-                    output_hash="",
-                )
-                self._ledger.append(block_entry)
-
+            self._cascade_block(run_id, stage_id)
         elif target_state == StageState.PASSED:
-            unblocked = self._graph.cascade_unblock(stage_id, self._states[run_id])
-            # Record cascade unblocks in the ledger
-            for unblocked_id in unblocked:
-                unblock_entry = LedgerEntry(
-                    run_id=run_id,
-                    stage_id=unblocked_id,
-                    state_transition=f"{StageState.BLOCKED.value}->{StageState.NOT_STARTED.value}",
-                    input_hash="",
-                    output_hash="",
-                )
-                self._ledger.append(unblock_entry)
+            self._cascade_unblock(run_id, stage_id)
 
         return sealed
+
+    # ------------------------------------------------------------------
+    # Cascade helpers
+    # ------------------------------------------------------------------
+
+    def _cascade_block(self, run_id: str, failed_stage_id: str) -> None:
+        """Block all downstream dependents of a failed stage."""
+        blocked = self._graph.cascade_block(
+            failed_stage_id, self._states[run_id]
+        )
+        for blocked_id in blocked:
+            entry = LedgerEntry(
+                run_id=run_id,
+                stage_id=blocked_id,
+                state_transition=(
+                    f"{StageState.NOT_STARTED.value}"
+                    f"->{StageState.BLOCKED.value}"
+                ),
+                input_hash="",
+                output_hash="",
+            )
+            self._ledger.append(entry)
+
+    def _cascade_unblock(self, run_id: str, passed_stage_id: str) -> None:
+        """Unblock dependents when a previously-failed stage passes."""
+        unblocked = self._graph.cascade_unblock(
+            passed_stage_id, self._states[run_id]
+        )
+        for unblocked_id in unblocked:
+            entry = LedgerEntry(
+                run_id=run_id,
+                stage_id=unblocked_id,
+                state_transition=(
+                    f"{StageState.BLOCKED.value}"
+                    f"->{StageState.NOT_STARTED.value}"
+                ),
+                input_hash="",
+                output_hash="",
+            )
+            self._ledger.append(entry)
 
     # ------------------------------------------------------------------
     # Convenience methods

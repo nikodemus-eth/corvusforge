@@ -26,7 +26,8 @@ class TestCliApp:
         result = runner.invoke(app, [])
         # Typer's no_args_is_help may exit with 0 or 2 depending on version
         assert result.exit_code in (0, 2)
-        assert "corvusforge" in result.output.lower() or "Usage" in result.output or "usage" in result.output.lower()
+        output = result.output.lower()
+        assert "corvusforge" in output or "usage" in output
 
     def test_help_flag(self):
         """--help must show usage information."""

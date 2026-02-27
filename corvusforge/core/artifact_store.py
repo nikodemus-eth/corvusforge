@@ -33,6 +33,11 @@ class ContentAddressedStore:
         self._base = Path(base_path)
         self._base.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _extract_digest(content_address: str) -> str:
+        """Strip the ``sha256:`` prefix from a content address, if present."""
+        return content_address.removeprefix("sha256:")
+
     def _artifact_path(self, sha256_digest: str) -> Path:
         """Compute the storage path for a SHA-256 digest.
 
@@ -91,7 +96,7 @@ class ContentAddressedStore:
         content_address:
             Either "sha256:<hex>" or just the hex digest.
         """
-        digest = content_address.removeprefix("sha256:")
+        digest = self._extract_digest(content_address)
         path = self._artifact_path(digest)
         if not path.exists():
             raise FileNotFoundError(f"Artifact not found: {content_address}")
@@ -103,20 +108,18 @@ class ContentAddressedStore:
 
     def exists(self, content_address: str) -> bool:
         """Check if an artifact exists in the store."""
-        digest = content_address.removeprefix("sha256:")
-        return self._artifact_path(digest).exists()
+        return self._artifact_path(self._extract_digest(content_address)).exists()
 
     def verify(self, content_address: str) -> bool:
         """Re-hash stored data and compare against the content address.
 
         Returns True if the stored bytes match the expected hash.
         """
-        digest = content_address.removeprefix("sha256:")
+        digest = self._extract_digest(content_address)
         path = self._artifact_path(digest)
         if not path.exists():
             return False
-        actual = sha256_hex(path.read_bytes())
-        return actual == digest
+        return sha256_hex(path.read_bytes()) == digest
 
     # ------------------------------------------------------------------
     # Helpers
@@ -129,7 +132,7 @@ class ContentAddressedStore:
         artifact_type: str = "generic",
     ) -> ArtifactRef:
         """Create an ArtifactRef for a stored artifact."""
-        digest = content_address.removeprefix("sha256:")
+        digest = self._extract_digest(content_address)
         path = self._artifact_path(digest)
         size = path.stat().st_size if path.exists() else 0
         return ArtifactRef(
