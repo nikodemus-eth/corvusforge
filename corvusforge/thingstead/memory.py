@@ -31,6 +31,10 @@ from corvusforge.core.hasher import canonical_json_bytes, sha256_hex
 logger = logging.getLogger(__name__)
 
 
+class ShardIntegrityError(RuntimeError):
+    """Raised when a shard's content_hash does not match its content."""
+
+
 class MemoryShard(BaseModel):
     """Immutable, content-addressed record of fleet execution data.
 
@@ -39,10 +43,16 @@ class MemoryShard(BaseModel):
     SHA-256 hex digest of the canonical JSON serialization of ``content``,
     providing tamper-evident integrity.
 
+    **Hardening (v0.3.1):** Added ``run_id`` for per-run isolation.
+    Shards are now scoped to the pipeline run that produced them,
+    supporting deterministic replay (Invariant 10).
+
     Parameters
     ----------
     shard_id:
         Unique identifier for this shard (UUID hex).
+    run_id:
+        The pipeline run that produced this shard (empty for legacy shards).
     fleet_id:
         The fleet that produced this shard.
     agent_id:
@@ -62,6 +72,7 @@ class MemoryShard(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     shard_id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    run_id: str = ""  # empty for legacy shards pre-hardening
     fleet_id: str
     agent_id: str
     stage_id: str
@@ -119,6 +130,7 @@ class FleetMemory:
         stage_id: str,
         content: dict[str, Any],
         tags: list[str] | None = None,
+        run_id: str = "",
     ) -> MemoryShard:
         """Create and persist a new memory shard.
 
@@ -137,6 +149,8 @@ class FleetMemory:
             Arbitrary JSON-serializable data to persist.
         tags:
             Optional list of string labels for categorization.
+        run_id:
+            The pipeline run producing this shard (for per-run isolation).
 
         Returns
         -------
@@ -145,6 +159,7 @@ class FleetMemory:
         """
         content_hash = self._compute_hash(content)
         shard = MemoryShard(
+            run_id=run_id,
             fleet_id=fleet_id,
             agent_id=agent_id,
             stage_id=stage_id,
@@ -224,6 +239,7 @@ class FleetMemory:
         stage_id: str | None = None,
         agent_id: str | None = None,
         tags: list[str] | None = None,
+        run_id: str | None = None,
     ) -> list[MemoryShard]:
         """Filter shards by one or more criteria.
 
@@ -241,6 +257,8 @@ class FleetMemory:
             Filter to shards from this specific agent.
         tags:
             Filter to shards that contain all of these tags.
+        run_id:
+            Filter to shards from this pipeline run.
 
         Returns
         -------
@@ -249,6 +267,8 @@ class FleetMemory:
         """
         results: list[MemoryShard] = []
         for shard in self._shards.values():
+            if run_id is not None and shard.run_id != run_id:
+                continue
             if fleet_id is not None and shard.fleet_id != fleet_id:
                 continue
             if stage_id is not None and shard.stage_id != stage_id:
@@ -316,6 +336,51 @@ class FleetMemory:
             logger.warning(
                 "Failed to load index from %s: %s", self._index_path, exc
             )
+
+    # ------------------------------------------------------------------
+    # Integrity verification
+    # ------------------------------------------------------------------
+
+    def verify_shard(self, shard: MemoryShard) -> bool:
+        """Re-hash shard content and compare against stored content_hash.
+
+        Returns ``True`` if the content matches the hash.  Raises
+        ``ShardIntegrityError`` if tampered.
+        """
+        expected = self._compute_hash(shard.content)
+        if shard.content_hash != expected:
+            raise ShardIntegrityError(
+                f"Shard {shard.shard_id} integrity check failed: "
+                f"expected hash={expected!r}, got {shard.content_hash!r}"
+            )
+        return True
+
+    def snapshot_for_run(self, run_id: str, *, verify: bool = True) -> list[MemoryShard]:
+        """Return all shards for a run, optionally verifying integrity.
+
+        Parameters
+        ----------
+        run_id:
+            The pipeline run to snapshot.
+        verify:
+            If ``True`` (default), verify each shard's content_hash
+            before including it in the snapshot.
+
+        Returns
+        -------
+        list[MemoryShard]
+            All verified shards for the run, ordered by creation time.
+
+        Raises
+        ------
+        ShardIntegrityError
+            If any shard fails integrity verification.
+        """
+        shards = self.query_shards(run_id=run_id)
+        if verify:
+            for shard in shards:
+                self.verify_shard(shard)
+        return shards
 
     # ------------------------------------------------------------------
     # Hashing

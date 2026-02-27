@@ -229,6 +229,10 @@ class PluginLoader:
         Computes the manifest hash and checks it against the signature in
         ``signature.sig`` using the crypto bridge.
 
+        **Fail-closed:** If the crypto bridge is unavailable or verification
+        throws, the package remains unverified.  Only an explicit
+        cryptographic confirmation returns ``True``.
+
         Parameters
         ----------
         package_path:
@@ -237,8 +241,8 @@ class PluginLoader:
         Returns
         -------
         bool
-            ``True`` if the signature is valid, or if the crypto bridge is
-            unavailable (with a warning).  ``False`` if verification fails.
+            ``True`` only if the signature was cryptographically confirmed.
+            ``False`` in all other cases.
         """
         sig_path = package_path / "signature.sig"
         if not sig_path.exists():
@@ -263,11 +267,12 @@ class PluginLoader:
 
             if not is_saoe_crypto_available():
                 logger.warning(
-                    "Crypto bridge unavailable — DLC '%s' assumed valid "
+                    "Crypto bridge unavailable — DLC '%s' remains unverified "
                     "(install saoe-core for production verification).",
                     package_path.name,
                 )
-                return True
+                # Fail-closed: do NOT assume valid.
+                return False
 
             # In a full deployment, the public key comes from the DLC manifest
             # or a ToolGate key registry.  Here we read it from the manifest
@@ -285,11 +290,11 @@ class PluginLoader:
 
         except Exception:
             logger.exception(
-                "Error verifying DLC '%s' — treating as valid (crypto "
-                "unavailable).",
+                "Error verifying DLC '%s' — package remains unverified.",
                 package_path.name,
             )
-            return True
+            # Fail-closed: do NOT assume valid on exception.
+            return False
 
     def install_dlc(self, package_path: Path) -> PluginEntry:
         """Copy a DLC package to the plugins directory and load it.

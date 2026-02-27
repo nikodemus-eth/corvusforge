@@ -246,6 +246,96 @@ class RunLedger:
         return True
 
     # ------------------------------------------------------------------
+    # External anchoring
+    # ------------------------------------------------------------------
+
+    def export_anchor(self, run_id: str) -> dict[str, Any]:
+        """Export a tamper-evident anchor for external witnessing.
+
+        The anchor captures the current chain state as a signed digest
+        that can be stored outside the system (file, transparency log,
+        external database).  Comparing a previously-exported anchor
+        against the current chain detects retroactive rewrites.
+
+        Returns
+        -------
+        dict[str, Any]
+            Keys: ``run_id``, ``entry_count``, ``root_hash`` (hash of the
+            last entry), ``first_entry_hash``, ``timestamp_utc``,
+            ``anchor_hash`` (SHA-256 of the anchor payload itself).
+        """
+        entries = self.get_run_entries(run_id)
+        if not entries:
+            return {
+                "run_id": run_id,
+                "entry_count": 0,
+                "root_hash": "",
+                "first_entry_hash": "",
+                "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+                "anchor_hash": "",
+            }
+
+        anchor_payload = {
+            "run_id": run_id,
+            "entry_count": len(entries),
+            "root_hash": entries[-1].entry_hash,
+            "first_entry_hash": entries[0].entry_hash,
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        anchor_hash = sha256_hex(canonical_json_bytes(anchor_payload))
+        anchor_payload["anchor_hash"] = anchor_hash
+        return anchor_payload
+
+    def verify_against_anchor(self, run_id: str, anchor: dict[str, Any]) -> bool:
+        """Verify the current chain against a previously exported anchor.
+
+        Returns ``True`` if the chain matches the anchor.  Raises
+        ``LedgerIntegrityError`` if the chain has diverged.
+
+        Parameters
+        ----------
+        run_id:
+            The run to verify.
+        anchor:
+            A dict previously returned by ``export_anchor()``.
+        """
+        entries = self.get_run_entries(run_id)
+
+        expected_count = anchor.get("entry_count", 0)
+        if len(entries) < expected_count:
+            raise LedgerIntegrityError(
+                f"Chain for {run_id} has {len(entries)} entries but "
+                f"anchor expects at least {expected_count}."
+            )
+
+        if expected_count == 0:
+            return True
+
+        # Verify the root hash at the anchor point matches
+        anchor_root = anchor.get("root_hash", "")
+        anchor_first = anchor.get("first_entry_hash", "")
+
+        if entries[0].entry_hash != anchor_first:
+            raise LedgerIntegrityError(
+                f"First entry hash mismatch: chain has "
+                f"{entries[0].entry_hash!r}, anchor has {anchor_first!r}. "
+                f"Chain may have been rewritten from the beginning."
+            )
+
+        # Find the entry at the anchor position
+        anchor_idx = expected_count - 1
+        if entries[anchor_idx].entry_hash != anchor_root:
+            raise LedgerIntegrityError(
+                f"Root hash mismatch at entry {expected_count}: chain has "
+                f"{entries[anchor_idx].entry_hash!r}, anchor has "
+                f"{anchor_root!r}. Chain may have been retroactively modified."
+            )
+
+        # Also verify the full chain integrity up to the anchor point
+        self.verify_chain(run_id)
+        return True
+
+    # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 

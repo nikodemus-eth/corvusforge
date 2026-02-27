@@ -90,6 +90,11 @@ class EnvelopeBus:
         except json.JSONDecodeError as exc:
             raise EnvelopeValidationError(f"Invalid JSON: {exc}") from exc
 
+        if not isinstance(data, dict):
+            raise EnvelopeValidationError(
+                f"Envelope must be a JSON object, got {type(data).__name__}"
+            )
+
         kind_str = data.get("envelope_kind")
         if not kind_str:
             raise EnvelopeValidationError("Missing envelope_kind field")
